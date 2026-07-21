@@ -8,6 +8,7 @@ import AuthorityDashboard from './components/AuthorityDashboard';
 import ApkGuideModal from './components/ApkGuideModal';
 import { ROAD_CATEGORIES } from './data/mockComplaints';
 import { Plus, Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
+const API = import.meta.env.VITE_API_URL || "";
 
 export default function App() {
   const [complaints, setComplaints] = useState([]);
@@ -30,7 +31,7 @@ export default function App() {
   useEffect(() => {
     const loadComplaints = async () => {
       try {
-        const response = await fetch('/api/complaints');
+        const response = await fetch(`${API}/api/complaints`);
         const data = await response.json();
         setComplaints(data);
       } catch (error) {
@@ -70,7 +71,7 @@ export default function App() {
 
   const handleAddComplaint = async (newComplaint) => {
     try {
-      const response = await fetch('/api/complaints', {
+      const response = await fetch(`${API}/api/complaints`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newComplaint)
@@ -94,7 +95,7 @@ export default function App() {
     try {
       const complaint = complaints.find((c) => c.id === complaintId);
       if (!complaint) return;
-      const response = await fetch(`/api/complaints/${complaintId}`, {
+      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ upvotes: (complaint.upvotes || 0) + 1 })
@@ -114,7 +115,7 @@ export default function App() {
 
   const handleAddRating = async (complaintId, rating) => {
     try {
-      const response = await fetch(`/api/complaints/${complaintId}`, {
+      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ citizenRating: rating })
@@ -143,7 +144,7 @@ export default function App() {
         note: note || `Status updated to ${status} by authority.`
       });
 
-      const response = await fetch(`/api/complaints/${complaintId}`, {
+      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
