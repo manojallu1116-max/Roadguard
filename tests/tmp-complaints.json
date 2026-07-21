@@ -1,0 +1,31 @@
+{
+  "complaints": [
+    {
+      "id": "COMP-6243",
+      "title": "Test",
+      "category": "Pothole",
+      "severity": "High",
+      "isHazardous": false,
+      "description": "x",
+      "location": {
+        "address": "a",
+        "lat": 1,
+        "lng": 2
+      },
+      "photoUrl": "",
+      "status": "Received",
+      "reportedBy": "Citizen User",
+      "createdAt": "2026-07-21T16:43:26.709Z",
+      "upvotes": 1,
+      "assignedDepartment": "Pending Department Assignment",
+      "timeline": [
+        {
+          "status": "Received",
+          "timestamp": "2026-07-21T16:43:26.710Z",
+          "note": "Complaint submitted successfully by citizen."
+        }
+      ],
+      "authorityNotes": "New complaint queued for review."
+    }
+  ]
+}
