@@ -1,7 +1,7 @@
 import React from 'react';
-import { Shield, User, Smartphone, Sun, Moon, AlertOctagon } from 'lucide-react';
+import { Shield, User, Sun, Moon, AlertOctagon } from 'lucide-react';
 
-export default function Navbar({ role, onToggleRole, theme, onToggleTheme, onOpenApkGuide }) {
+export default function Navbar({ role, onToggleRole, theme, onToggleTheme }) {
   return (
     <header className="app-header">
       <div className="brand-logo">
@@ -19,16 +19,6 @@ export default function Navbar({ role, onToggleRole, theme, onToggleTheme, onOpe
       </div>
 
       <div className="header-actions">
-        {/* APK Guide Button */}
-        <button 
-          onClick={onOpenApkGuide} 
-          style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38bdf8', padding: '5px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-          title="Get APK Build Instructions"
-        >
-          <Smartphone size={13} />
-          APK
-        </button>
-
         {/* Role Toggle Pill */}
         <button 
           className={`role-badge ${role.toLowerCase()}`}

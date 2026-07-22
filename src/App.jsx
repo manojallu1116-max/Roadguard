@@ -5,7 +5,6 @@ import ComplaintCard from './components/ComplaintCard';
 import MapView from './components/MapView';
 import NewComplaintModal from './components/NewComplaintModal';
 import AuthorityDashboard from './components/AuthorityDashboard';
-import ApkGuideModal from './components/ApkGuideModal';
 import { ROAD_CATEGORIES } from './data/mockComplaints';
 import { Plus, Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
 const API = import.meta.env.VITE_API_URL || "";
@@ -17,7 +16,6 @@ export default function App() {
   const [theme, setTheme] = useState('dark');
   const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'map', 'admin', 'my-reports'
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isApkGuideOpen, setIsApkGuideOpen] = useState(false);
   const [selectedComplaintForModal, setSelectedComplaintForModal] = useState(null);
   
   // Search & Filter state
@@ -198,7 +196,6 @@ export default function App() {
         onToggleRole={handleToggleRole}
         theme={theme}
         onToggleTheme={handleToggleTheme}
-        onOpenApkGuide={() => setIsApkGuideOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -360,12 +357,6 @@ export default function App() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         onSubmitComplaint={handleAddComplaint}
-      />
-
-      {/* APK Export Guide Modal */}
-      <ApkGuideModal 
-        isOpen={isApkGuideOpen}
-        onClose={() => setIsApkGuideOpen(false)}
       />
 
       {/* Bottom Nav Bar */}
