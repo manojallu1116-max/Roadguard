@@ -207,28 +207,17 @@ export default function App() {
         {activeTab === 'feed' && (
           <div>
             {/* Quick Hero Banner */}
-            <div className="card" style={{ background: 'var(--accent-gradient)', color: 'white', padding: '16px', borderRadius: '16px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Report Road Hazards</h2>
-                  <p style={{ fontSize: '0.8rem', opacity: 0.9, marginTop: '2px' }}>
+            <div className="card hero-card">
+              <div className="hero-content">
+                <div className="hero-copy">
+                  <h2 className="hero-title">Report Road Hazards</h2>
+                  <p className="hero-text">
                     Capture photo, share GPS location & track repair progress live.
                   </p>
                 </div>
                 <button 
                   onClick={() => setIsReportModalOpen(true)}
-                  style={{
-                    background: 'white',
-                    color: '#2563eb',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '20px',
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-                  }}
+                  className="hero-report-button"
                 >
                   + New Report
                 </button>
@@ -250,7 +239,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '14px' }}>
+            <div className="chip-row">
               <button 
                 onClick={() => setCategoryFilter('All')}
                 style={{

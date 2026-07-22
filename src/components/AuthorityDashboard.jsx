@@ -54,7 +54,7 @@ export default function AuthorityDashboard({
     <div style={{ paddingBottom: '20px' }}>
       {/* Authority Banner */}
       <div className="card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+        <div className="authority-banner-heading" style={{ marginBottom: '8px' }}>
           <div style={{ background: '#3b82f6', color: 'white', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield size={18} />
           </div>
@@ -65,7 +65,7 @@ export default function AuthorityDashboard({
         </div>
 
         {/* Analytics Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '12px' }}>
+        <div className="analytics-grid" style={{ marginTop: '12px' }}>
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
             <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#f8fafc', display: 'block' }}>{total}</span>
             <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Total</span>
@@ -93,7 +93,7 @@ export default function AuthorityDashboard({
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '12px' }}>
+      <div className="chip-row">
         {['All', 'Received', 'In Progress', 'Completed'].map(st => (
           <button
             key={st}
@@ -185,7 +185,7 @@ export default function AuthorityDashboard({
               {/* Proof Photo URL */}
               <div className="form-group">
                 <label className="form-label">Attach Completion / Inspection Proof Photo</label>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <div className="upload-row" style={{ marginBottom: '8px' }}>
                   <input 
                     type="url" 
                     className="form-input" 

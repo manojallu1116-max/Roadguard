@@ -47,12 +47,12 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
   return (
     <div className="card card-hover" style={{ position: 'relative' }}>
       {/* Header Info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+      <div className="complaint-header">
         <div>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
             {complaint.id}
           </span>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '2px 0', color: 'var(--text-main)' }}>
+          <h3 className="complaint-title" style={{ fontSize: '1rem', fontWeight: 700, margin: '2px 0', color: 'var(--text-main)' }}>
             {complaint.title}
           </h3>
         </div>
@@ -77,16 +77,16 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       </div>
 
       {/* Location Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+      <div className="location-line" style={{ fontSize: '0.8rem' }}>
         <MapPin size={14} color="#38bdf8" />
-        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '320px' }}>
+        <span>
           {complaint.location.address}
         </span>
       </div>
 
       {/* Main Image View */}
       {complaint.photoUrl && (
-        <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', border: '1px solid var(--border-color)', position: 'relative' }}>
+        <div className="complaint-image" style={{ borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', border: '1px solid var(--border-color)', position: 'relative' }}>
           <img 
             src={complaint.photoUrl} 
             alt={complaint.title} 
@@ -99,19 +99,19 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       )}
 
       {/* Brief Description */}
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.4' }}>
+      <p className="complaint-description" style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.4' }}>
         {complaint.description}
       </p>
 
       {/* Department Assignment Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#94a3b8', background: 'var(--bg-primary)', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
+      <div className="department-line" style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'var(--bg-primary)', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
         <ShieldCheck size={14} color="#38bdf8" />
         <span>Dept: <strong>{complaint.assignedDepartment || "Pending Officer Review"}</strong></span>
       </div>
 
       {/* Upvotes, Share & Expand Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="complaint-actions" style={{ paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+        <div>
           <button 
             onClick={() => onUpvote(complaint.id)}
             style={{

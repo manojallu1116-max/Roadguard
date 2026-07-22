@@ -140,7 +140,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           </div>
 
           {/* Category & Severity Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }} className="form-group">
+          <div className="form-group form-grid">
             <div>
               <label className="form-label">Damage Type</label>
               <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -196,7 +196,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           {/* Photo Upload & Preview Section */}
           <div className="form-group">
             <label className="form-label">Upload Damage Photo *</label>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <div className="upload-row" style={{ marginBottom: '10px' }}>
               <label className="btn-secondary" style={{ flex: 1, cursor: 'pointer' }}>
                 <Camera size={16} /> Take Photo / Choose File
                 <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} style={{ display: 'none' }} />
@@ -207,7 +207,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
             </div>
 
             {photoPreview && (
-              <div style={{ position: 'relative', height: '140px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+              <div className="photo-preview" style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                 <img src={photoPreview} alt="Damage Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(16,185,129,0.9)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={12} /> Photo Attached
@@ -218,7 +218,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
 
           {/* Location Section with Live GPS & Map Picker */}
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <div className="form-row" style={{ marginBottom: '6px' }}>
               <label className="form-label" style={{ margin: 0 }}>Location & Address *</label>
               <button 
                 type="button" 

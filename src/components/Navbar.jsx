@@ -18,7 +18,7 @@ export default function Navbar({ role, onToggleRole, theme, onToggleTheme, onOpe
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="header-actions">
         {/* APK Guide Button */}
         <button 
           onClick={onOpenApkGuide} 
@@ -42,6 +42,7 @@ export default function Navbar({ role, onToggleRole, theme, onToggleTheme, onOpe
         {/* Theme Toggle */}
         <button 
           onClick={onToggleTheme}
+          className="header-icon-button"
           style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
         >
           {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}

@@ -106,7 +106,7 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
   };
 
   return (
-    <div className="map-container-box" style={{ height: isPickerMode ? '220px' : 'calc(100vh - 220px)', position: 'relative' }}>
+    <div className={`map-container-box ${isPickerMode ? 'picker-map' : ''}`} style={{ position: 'relative' }}>
       <MapContainer 
         center={[currentPos.lat, currentPos.lng]} 
         zoom={13} 

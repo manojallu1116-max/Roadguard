@@ -22,20 +22,7 @@ export default function BottomNav({ activeTab, onChangeTab, onOpenNewReport, rol
 
       <button 
         onClick={onOpenNewReport}
-        style={{
-          background: 'var(--accent-gradient)',
-          color: 'white',
-          border: 'none',
-          width: '46px',
-          height: '46px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 14px rgba(37, 99, 235, 0.5)',
-          cursor: 'pointer',
-          marginTop: '-18px'
-        }}
+        className="nav-report-button"
         title="Report Damaged Road"
       >
         <PlusCircle size={26} />
