@@ -8,6 +8,8 @@ const envSchema = z.object({
   PORT: z.string().pipe(z.coerce.number().min(1024).max(65535)).default('3001'),
   MONGODB_URI: z.string().url('Invalid MongoDB URI format'),
   DB_NAME: z.string().default('roadDamageReporter'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info')
 });
 

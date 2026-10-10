@@ -7,14 +7,15 @@ import NewComplaintModal from './components/NewComplaintModal';
 import AuthorityDashboard from './components/AuthorityDashboard';
 import { ROAD_CATEGORIES } from './data/mockComplaints';
 import { Plus, Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { useAuth } from './auth/AuthContext';
 const API = import.meta.env.VITE_API_URL || "";
 
 export default function App() {
+  const { user, logout } = useAuth();
   const [complaints, setComplaints] = useState([]);
-
-  const [role, setRole] = useState('Citizen'); // 'Citizen' or 'Authority'
+  const isAuthority = (user?.role === 'admin' || user?.role === 'authority') && user.isApproved;
   const [theme, setTheme] = useState('dark');
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'map', 'admin', 'my-reports'
+  const [activeTab, setActiveTab] = useState(isAuthority ? 'admin' : 'feed'); // 'feed', 'map', 'admin', 'my-reports'
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedComplaintForModal, setSelectedComplaintForModal] = useState(null);
   
@@ -25,11 +26,14 @@ export default function App() {
 
   // Toast notifications
   const [toastMessage, setToastMessage] = useState(null);
+  const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('roadguard.jwt')}` });
 
   useEffect(() => {
     const loadComplaints = async () => {
       try {
-        const response = await fetch(`${API}/api/complaints`);
+        const endpoint = isAuthority ? '/api/complaints' : '/api/complaints/mine';
+        const response = await fetch(`${API}${endpoint}`, { headers: authHeaders() });
+        if (!response.ok) throw new Error(`Unable to load reports (${response.status})`);
         const data = await response.json();
         setComplaints(data);
       } catch (error) {
@@ -38,7 +42,7 @@ export default function App() {
     };
 
     loadComplaints();
-  }, []);
+  }, [isAuthority]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -51,18 +55,6 @@ export default function App() {
     }, 4000);
   };
 
-  const handleToggleRole = () => {
-    const nextRole = role === 'Citizen' ? 'Authority' : 'Citizen';
-    setRole(nextRole);
-    if (nextRole === 'Authority') {
-      setActiveTab('admin');
-      showToast("Switched to Authority / Officer Dashboard");
-    } else {
-      setActiveTab('feed');
-      showToast("Switched to Citizen Mode");
-    }
-  };
-
   const handleToggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
@@ -71,7 +63,7 @@ export default function App() {
     try {
       const response = await fetch(`${API}/api/complaints`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(newComplaint)
       });
       if (!response.ok) {
@@ -95,7 +87,7 @@ export default function App() {
       if (!complaint) return;
       const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ upvotes: (complaint.upvotes || 0) + 1 })
       });
       if (!response.ok) {
@@ -115,7 +107,7 @@ export default function App() {
     try {
       const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ citizenRating: rating })
       });
       if (!response.ok) {
@@ -144,7 +136,7 @@ export default function App() {
 
       const response = await fetch(`${API}/api/complaints/${complaintId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           status,
           assignedDepartment: department || complaint.assignedDepartment,
@@ -192,8 +184,8 @@ export default function App() {
 
       {/* Header */}
       <Navbar 
-        role={role}
-        onToggleRole={handleToggleRole}
+        user={user}
+        onLogout={logout}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
@@ -207,9 +199,9 @@ export default function App() {
             <div className="card hero-card">
               <div className="hero-content">
                 <div className="hero-copy">
-                  <h2 className="hero-title">Report Road Hazards</h2>
+                  <h2 className="hero-title">{isAuthority ? 'Road Damage Overview' : 'My Road Report Status'}</h2>
                   <p className="hero-text">
-                    Capture photo, share GPS location & track repair progress live.
+                    {isAuthority ? 'Review reports and coordinate repair progress.' : 'Submit an issue and follow every repair update here.'}
                   </p>
                 </div>
                 <button 
@@ -287,7 +279,7 @@ export default function App() {
                   complaint={comp} 
                   onUpvote={handleUpvote}
                   onAddRating={handleAddRating}
-                  isAuthorityMode={role === 'Authority'}
+                  isAuthorityMode={isAuthority}
                   onOpenAuthorityModal={(c) => setSelectedComplaintForModal(c)}
                 />
               ))
@@ -315,7 +307,7 @@ export default function App() {
         )}
 
         {/* AUTHORITY / ADMIN TAB */}
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && isAuthority && (
           <AuthorityDashboard 
             complaints={complaints}
             onUpdateStatus={handleUpdateStatus}
@@ -331,7 +323,7 @@ export default function App() {
           <div>
             <div className="card" style={{ background: 'var(--bg-card)', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>My Submitted Activity</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Track complaints filed from this device</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Your submitted reports and their latest repair status</p>
             </div>
             {complaints.map(comp => (
               <ComplaintCard 
@@ -339,7 +331,7 @@ export default function App() {
                 complaint={comp} 
                 onUpvote={handleUpvote}
                 onAddRating={handleAddRating}
-                isAuthorityMode={role === 'Authority'}
+                isAuthorityMode={isAuthority}
                 onOpenAuthorityModal={(c) => setSelectedComplaintForModal(c)}
               />
             ))}
@@ -364,7 +356,7 @@ export default function App() {
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         onOpenNewReport={() => setIsReportModalOpen(true)}
-        role={role}
+        role={isAuthority ? 'admin' : 'citizen'}
       />
     </div>
   );

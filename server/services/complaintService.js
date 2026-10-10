@@ -14,6 +14,16 @@ export class ComplaintService {
     }));
   }
 
+  async listComplaintsForUser(userId, options = {}) {
+    const { limit = 100, skip = 0 } = options;
+    const complaints = await Complaint.find({ reportedByUserId: userId })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean();
+    return complaints.map(doc => ({ ...doc, id: doc.id || doc._id?.toString() }));
+  }
+
   async getComplaintById(complaintId) {
     const complaint = await Complaint.findOne({
       $or: [{ id: complaintId }, { _id: complaintId }]
@@ -27,7 +37,7 @@ export class ComplaintService {
     };
   }
 
-  async createComplaint(data) {
+  async createComplaint(data, reporter = null) {
     const complaint = new Complaint({
       id: data.id || undefined,
       title: data.title,
@@ -42,7 +52,8 @@ export class ComplaintService {
       },
       photoUrl: data.photoUrl || '',
       status: data.status || 'Received',
-      reportedBy: data.reportedBy || 'Citizen User',
+      reportedBy: reporter?.name || data.reportedBy || 'Citizen User',
+      reportedByUserId: reporter?._id || null,
       upvotes: data.upvotes || 1,
       assignedDepartment: data.assignedDepartment || 'Pending Department Assignment',
       timeline: data.timeline || [

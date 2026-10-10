@@ -2,8 +2,9 @@ import React from 'react';
 import { Home, Map, PlusCircle, Shield, ListFilter } from 'lucide-react';
 
 export default function BottomNav({ activeTab, onChangeTab, onOpenNewReport, role }) {
+  const isAuthority = role === 'admin' || role === 'authority';
   return (
-    <nav className="bottom-nav">
+    <nav className={`bottom-nav ${isAuthority ? '' : 'citizen-nav'}`}>
       <button 
         className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`}
         onClick={() => onChangeTab('feed')}
@@ -28,13 +29,13 @@ export default function BottomNav({ activeTab, onChangeTab, onOpenNewReport, rol
         <PlusCircle size={26} />
       </button>
 
-      <button 
+      {isAuthority && <button
         className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`}
         onClick={() => onChangeTab('admin')}
       >
         <Shield size={20} />
-        <span>Authorities</span>
-      </button>
+        <span>Admin</span>
+      </button>}
 
       <button 
         className={`nav-item ${activeTab === 'my-reports' ? 'active' : ''}`}

@@ -26,8 +26,19 @@ export class ComplaintController {
   async createComplaint(req, res, next) {
     try {
       const validatedData = createComplaintSchema.parse(req.body);
-      const complaint = await complaintService.createComplaint(validatedData);
+      const complaint = await complaintService.createComplaint(validatedData, req.user);
       res.status(201).json(complaint);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async listMyComplaints(req, res, next) {
+    try {
+      const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
+      const skip = Math.max(parseInt(req.query.skip) || 0, 0);
+      const complaints = await complaintService.listComplaintsForUser(req.user._id, { limit, skip });
+      res.json(complaints);
     } catch (error) {
       next(error);
     }
@@ -36,6 +47,17 @@ export class ComplaintController {
   async updateComplaint(req, res, next) {
     try {
       const validatedData = updateComplaintSchema.parse(req.body);
+      const isAdmin = req.user?.role === 'admin' || req.user?.role === 'authority';
+      if (!isAdmin) {
+        const complaint = await complaintService.getComplaintById(req.params.id);
+        if (String(complaint.reportedByUserId) !== String(req.user._id)) {
+          return res.status(403).json({ error: 'You can only update your own report' });
+        }
+        const requestedFields = Object.keys(validatedData);
+        if (requestedFields.some(field => !['upvotes', 'citizenRating'].includes(field))) {
+          return res.status(403).json({ error: 'Citizens can only upvote or rate their own report' });
+        }
+      }
       const complaint = await complaintService.updateComplaint(req.params.id, validatedData);
       res.json(complaint);
     } catch (error) {

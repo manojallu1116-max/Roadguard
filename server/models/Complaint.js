@@ -69,6 +69,12 @@ const complaintSchema = new mongoose.Schema(
       trim: true,
       default: 'Citizen User'
     },
+    reportedByUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+      default: null
+    },
     upvotes: {
       type: Number,
       default: 1,
