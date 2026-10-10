@@ -10,6 +10,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       case 'Received': return 'status-received';
       case 'In Progress': return 'status-inprogress';
       case 'Completed': return 'status-completed';
+      case 'Resolved': return 'status-completed';
       case 'Rejected': return 'status-rejected';
       default: return 'status-received';
     }
@@ -212,7 +213,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           )}
 
           {/* Citizen Rating & Feedback Section when Completed */}
-          {complaint.status === 'Completed' && (
+          {['Completed', 'Resolved'].includes(complaint.status) && (
             <div style={{ marginTop: '14px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                 Citizen Feedback & Satisfaction Rating:

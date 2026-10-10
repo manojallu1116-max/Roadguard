@@ -1,7 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { validateEnv, getEnv } from './config/env.js';
 import { connectDatabase } from './config/database.js';
@@ -10,9 +8,6 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import healthRoutes from './routes/health.js';
 import complaintRoutes from './routes/complaints.js';
 import authRoutes from './routes/auth.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Validate environment first
 validateEnv();
@@ -32,21 +27,18 @@ app.use((req, res, next) => {
   next();
 });
 
+// The React app is deployed independently on Vercel. Render serves this API only.
+app.get('/', (_req, res) => {
+  res.json({ message: 'RoadGuard API is running' });
+});
+
 // API Routes
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
 
-// Static files
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// Fallback to index.html for SPA
-app.use((req, res) => {
-  if (req.path.startsWith('/api')) {
-    return notFoundHandler(req, res);
-  }
-  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
-});
+// Unknown routes are API errors; the frontend is hosted by Vercel.
+app.use(notFoundHandler);
 
 // Error handling (must be last)
 app.use(errorHandler);

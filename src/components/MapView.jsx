@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
 const createCustomMarker = (status, isHazardous) => {
   let color = '#f59e0b'; // pending
   if (status === 'In Progress') color = '#3b82f6';
-  if (status === 'Completed') color = '#10b981';
+  if (status === 'Completed' || status === 'Resolved') color = '#10b981';
   if (status === 'Rejected') color = '#ef4444';
   if (isHazardous) color = '#dc2626';
 

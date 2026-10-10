@@ -47,8 +47,16 @@ export class ComplaintController {
   async updateComplaint(req, res, next) {
     try {
       const validatedData = updateComplaintSchema.parse(req.body);
-      const isAdmin = req.user?.role === 'admin' || req.user?.role === 'authority';
-      if (!isAdmin) {
+      const isAdminRole = req.user?.role === 'admin' || req.user?.role === 'authority';
+      const isApprovedAdmin = isAdminRole && req.user?.isApproved;
+      const adminOnlyFields = ['status', 'assignedDepartment', 'authorityNotes', 'proofPhotoUrl', 'timeline'];
+      const isAdministrativeUpdate = Object.keys(validatedData).some(field => adminOnlyFields.includes(field));
+
+      if (isAdministrativeUpdate && !isApprovedAdmin) {
+        return res.status(403).json({ error: 'Only approved admins can update complaint status or repair details' });
+      }
+
+      if (!isApprovedAdmin) {
         const complaint = await complaintService.getComplaintById(req.params.id);
         if (String(complaint.reportedByUserId) !== String(req.user._id)) {
           return res.status(403).json({ error: 'You can only update your own report' });

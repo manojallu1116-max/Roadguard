@@ -11,6 +11,7 @@ export default function AuthorityDashboard({
   onCloseModal,
   onOpenModal
 }) {
+  const isCompleted = (status) => status === 'Completed' || status === 'Resolved';
   const [filterStatus, setFilterStatus] = useState('All');
   const [newStatus, setNewStatus] = useState('');
   const [departmentNote, setDepartmentNote] = useState('');
@@ -21,12 +22,12 @@ export default function AuthorityDashboard({
   const total = complaints.length;
   const pendingCount = complaints.filter(c => c.status === 'Received').length;
   const inProgressCount = complaints.filter(c => c.status === 'In Progress').length;
-  const completedCount = complaints.filter(c => c.status === 'Completed').length;
-  const criticalHazards = complaints.filter(c => c.isHazardous && c.status !== 'Completed').length;
+  const completedCount = complaints.filter(c => isCompleted(c.status)).length;
+  const criticalHazards = complaints.filter(c => c.isHazardous && !isCompleted(c.status)).length;
 
   const filteredComplaints = complaints.filter(c => {
     if (filterStatus === 'All') return true;
-    return c.status === filterStatus;
+    return filterStatus === 'Completed' ? isCompleted(c.status) : c.status === filterStatus;
   });
 
   const handleOpenActionModal = (complaint) => {
@@ -37,17 +38,17 @@ export default function AuthorityDashboard({
     setProofPhoto(complaint.proofPhotoUrl || '');
   };
 
-  const handleSaveStatus = (e) => {
+  const handleSaveStatus = async (e) => {
     e.preventDefault();
     if (!selectedComplaintForModal) return;
 
-    onUpdateStatus(selectedComplaintForModal.id, {
+    const didUpdate = await onUpdateStatus(selectedComplaintForModal.id, {
       status: newStatus,
       note: departmentNote,
       department: assignedDept,
       proofPhotoUrl: proofPhoto
     });
-    onCloseModal();
+    if (didUpdate) onCloseModal();
   };
 
   return (

@@ -1,4 +1,13 @@
+import mongoose from 'mongoose';
 import { Complaint } from '../models/Complaint.js';
+
+const complaintLookup = (complaintId) => {
+  const conditions = [{ id: complaintId }];
+  if (mongoose.Types.ObjectId.isValid(complaintId)) {
+    conditions.push({ _id: complaintId });
+  }
+  return { $or: conditions };
+};
 
 export class ComplaintService {
   async listComplaints(options = {}) {
@@ -25,9 +34,7 @@ export class ComplaintService {
   }
 
   async getComplaintById(complaintId) {
-    const complaint = await Complaint.findOne({
-      $or: [{ id: complaintId }, { _id: complaintId }]
-    }).lean();
+    const complaint = await Complaint.findOne(complaintLookup(complaintId)).lean();
     if (!complaint) {
       throw new Error(`Complaint not found: ${complaintId}`);
     }
@@ -75,7 +82,7 @@ export class ComplaintService {
 
   async updateComplaint(complaintId, updates) {
     const complaint = await Complaint.findOneAndUpdate(
-      { $or: [{ id: complaintId }, { _id: complaintId }] },
+      complaintLookup(complaintId),
       { $set: updates, updatedAt: new Date() },
       { new: true, runValidators: true }
     ).lean();
@@ -91,9 +98,7 @@ export class ComplaintService {
   }
 
   async deleteComplaint(complaintId) {
-    const result = await Complaint.findOneAndDelete({
-      $or: [{ id: complaintId }, { _id: complaintId }]
-    });
+    const result = await Complaint.findOneAndDelete(complaintLookup(complaintId));
 
     if (!result) {
       throw new Error(`Complaint not found: ${complaintId}`);

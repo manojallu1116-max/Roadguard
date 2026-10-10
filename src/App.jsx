@@ -10,6 +10,19 @@ import { Plus, Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
 const API = import.meta.env.VITE_API_URL || "";
 
+async function getApiError(response, fallback) {
+  try {
+    const payload = await response.json();
+    const details = Array.isArray(payload.details)
+      ? payload.details.map(item => item.message).filter(Boolean).join(' ')
+      : '';
+    if (details) return `${payload.error || fallback}: ${details}`;
+    return payload.error || payload.message || fallback;
+  } catch (_error) {
+    return fallback;
+  }
+}
+
 export default function App() {
   const { user, logout } = useAuth();
   const [complaints, setComplaints] = useState([]);
@@ -67,9 +80,7 @@ export default function App() {
         body: JSON.stringify(newComplaint)
       });
       if (!response.ok) {
-        const text = await response.text();
-        console.error('Backend error response:', text);
-        throw new Error(`Server error: ${response.status} ${response.statusText}\n${text}`);
+        throw new Error(await getApiError(response, `Unable to submit report (${response.status})`));
       }
       const createdComplaint = await response.json();
       setComplaints([createdComplaint, ...complaints]);
@@ -77,7 +88,7 @@ export default function App() {
       showToast(`Complaint #${createdComplaint.id} submitted successfully!`);
     } catch (error) {
       console.error('Failed to create complaint:', error);
-      showToast('Unable to save your report right now.');
+      showToast(error.message || 'Unable to save your report right now.');
     }
   };
 
@@ -91,15 +102,14 @@ export default function App() {
         body: JSON.stringify({ upvotes: (complaint.upvotes || 0) + 1 })
       });
       if (!response.ok) {
-        const text = await response.text();
-        console.error('Backend error response:', text);
-        throw new Error(`Server error: ${response.status} ${response.statusText}\n${text}`);
+        throw new Error(await getApiError(response, `Unable to upvote (${response.status})`));
       }
       const updated = await response.json();
       setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
       showToast('Upvoted! Thank you for prioritizing this issue.');
     } catch (error) {
       console.error('Failed to upvote:', error);
+      showToast(error.message || 'Unable to upvote this report.');
     }
   };
 
@@ -111,15 +121,14 @@ export default function App() {
         body: JSON.stringify({ citizenRating: rating })
       });
       if (!response.ok) {
-        const text = await response.text();
-        console.error('Backend error response:', text);
-        throw new Error(`Server error: ${response.status} ${response.statusText}\n${text}`);
+        throw new Error(await getApiError(response, `Unable to save rating (${response.status})`));
       }
       const updated = await response.json();
       setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
       showToast(`Rating recorded: ${rating} Star(s)!`);
     } catch (error) {
       console.error('Failed to save rating:', error);
+      showToast(error.message || 'Unable to save rating.');
     }
   };
 
@@ -146,17 +155,17 @@ export default function App() {
         })
       });
       if (!response.ok) {
-        const text = await response.text();
-        console.error('Backend error response:', text);
-        throw new Error(`Server error: ${response.status} ${response.statusText}\n${text}`);
+        throw new Error(await getApiError(response, `Unable to update complaint (${response.status})`));
       }
       const updated = await response.json();
 
       setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
       showToast(`Updated Complaint #${complaintId} status to "${status}"`);
+      return true;
     } catch (error) {
       console.error('Failed to update status:', error);
-      showToast('Unable to update the complaint status.');
+      showToast(error.message || 'Unable to update the complaint status.');
+      return false;
     }
   };
 

@@ -61,7 +61,8 @@ const complaintSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Received', 'In Progress', 'Resolved', 'On Hold', 'Rejected'],
+      // "Resolved" is retained for existing MongoDB documents; new UI updates use "Completed".
+      enum: ['Received', 'In Progress', 'Completed', 'Resolved', 'On Hold', 'Rejected'],
       default: 'Received'
     },
     reportedBy: {
@@ -129,7 +130,7 @@ export const createComplaintSchema = z.object({
     lng: z.number().min(-180).max(180).optional().default(0)
   }).optional(),
   photoUrl: z.string().url().optional().or(z.literal('')).default(''),
-  status: z.enum(['Received', 'In Progress', 'Resolved', 'On Hold', 'Rejected']).optional().default('Received'),
+  status: z.enum(['Received', 'In Progress', 'Completed', 'Resolved', 'On Hold', 'Rejected']).optional().default('Received'),
   reportedBy: z.string().optional()
 });
 
@@ -145,13 +146,14 @@ export const updateComplaintSchema = z.object({
     lng: z.number().min(-180).max(180).optional()
   }).optional(),
   photoUrl: z.string().url().optional().or(z.literal('')),
-  status: z.enum(['Received', 'In Progress', 'Resolved', 'On Hold', 'Rejected']).optional(),
+  status: z.enum(['Received', 'In Progress', 'Completed', 'Resolved', 'On Hold', 'Rejected']).optional(),
   upvotes: z.number().min(0).optional(),
   citizenRating: z.enum([1, 2, 3, 4, 5]).optional().nullable(),
   assignedDepartment: z.string().optional(),
   timeline: z.array(z.object({
     status: z.string(),
-    timestamp: z.date().optional(),
+    // API clients serialize JavaScript Dates as ISO strings; coerce those safely before MongoDB update.
+    timestamp: z.coerce.date().optional(),
     note: z.string().optional()
   })).optional(),
   authorityNotes: z.string().optional(),

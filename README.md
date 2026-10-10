@@ -23,6 +23,7 @@ The API runs at http://localhost:3001/api/complaints.
 ## Deploy
 This project is ready for deployment on Render (API) and Vercel (client), or as a single Render deployment.
 - Set the start command to: npm start
+- The Render service is API-only. Its root URL returns `{ "message": "RoadGuard API is running" }`; it does not require or serve a `dist/` frontend directory.
 - Set `MONGODB_URI`, `DB_NAME`, `JWT_SECRET`, and optional `JWT_EXPIRES_IN` in the Render environment.
 - On Vercel, set `VITE_API_URL` to the deployed Render API origin (for example `https://roadguard-api.onrender.com`).
 - Ensure the platform exposes port 3001 or uses the PORT environment variable.
