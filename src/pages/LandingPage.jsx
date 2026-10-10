@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, ArrowRight, CheckCircle2, Clock3, MapPinned,
-  Navigation, Route, ShieldCheck, UsersRound
+  Mail, Navigation, Route, ShieldCheck, UsersRound
 } from 'lucide-react';
 
 const features = [
@@ -20,6 +20,7 @@ const steps = [
 
 export default function LandingPage() {
   const scrollToFeatures = () => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL?.trim() || 'support@roadguard.app';
 
   return (
     <main className="landing-page" id="top">
@@ -88,7 +89,13 @@ export default function LandingPage() {
       </section>
 
       <section className="landing-section landing-contact" id="contact">
-        <span className="landing-contact-icon"><ShieldCheck size={24} /></span><div><h2>Need help getting started?</h2><p>Support contact details will be provided by the project administrator.</p></div>
+        <span className="landing-contact-icon"><Mail size={24} /></span>
+        <div>
+          <h2>Need to escalate an unresolved report?</h2>
+          <p>Sign in to check your report ID, latest update, and assigned department before requesting further help. Include your report ID when you contact support.</p>
+          <a className="landing-support-email" href={'mailto:' + supportEmail}>{supportEmail}</a>
+        </div>
+        <Link className="landing-button landing-button-outline" to="/login">Check my report</Link>
       </section>
 
       <footer className="landing-footer">
