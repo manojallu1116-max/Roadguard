@@ -11,6 +11,9 @@ router.get('/', authenticate, requireApprovedAuthority, (req, res, next) => comp
 // Citizen status dashboard: only the authenticated user's submitted reports.
 router.get('/mine', authenticate, (req, res, next) => complaintController.listMyComplaints(req, res, next));
 
+// Community browsing returns only report details intended for other signed-in citizens.
+router.get('/community', authenticate, (req, res, next) => complaintController.listCommunityComplaints(req, res, next));
+
 // Search complaints
 router.get('/search', authenticate, requireApprovedAuthority, (req, res, next) => complaintController.searchComplaints(req, res, next));
 

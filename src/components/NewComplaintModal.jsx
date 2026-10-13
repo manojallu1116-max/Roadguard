@@ -6,20 +6,20 @@ import { ROAD_CATEGORIES, SEVERITY_LEVELS } from '../data/mockComplaints';
 export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(ROAD_CATEGORIES[0]);
-  const [severity, setSeverity] = useState('High');
+  const [severity, setSeverity] = useState('Medium');
   const [isHazardous, setIsHazardous] = useState(false);
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
-  const [coords, setCoords] = useState({ lat: 12.9716, lng: 77.5946 });
+  const [coords, setCoords] = useState(null);
   const [photoUrl, setPhotoUrl] = useState('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
 
   if (!isOpen) return null;
 
   const handleLocationSelect = (latlng) => {
     setCoords(latlng);
-    setAddress(`Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)} (Selected on Map)`);
   };
 
   const handleUseGPS = () => {
@@ -29,7 +29,6 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
         (pos) => {
           const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setCoords(latlng);
-          setAddress(`GPS Location (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`);
           setIsGettingLocation(false);
         },
         () => {
@@ -66,8 +65,9 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
     setPhotoUrl(picked);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!title.trim()) {
       alert("Please enter a title for the complaint.");
       return;
@@ -76,37 +76,35 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
       alert("Please specify the location or select on map.");
       return;
     }
+    if (!coords) {
+      alert("Please use GPS or select the damage location on the map.");
+      return;
+    }
+    if (!photoUrl) {
+      alert("Please upload a damage photo or choose the demo photo.");
+      return;
+    }
 
     const newComplaint = {
-      id: `COMP-${Math.floor(1000 + Math.random() * 9000)}`,
       title: title.trim(),
       category,
       severity,
       isHazardous,
-      description: description.trim() || "No additional description provided.",
+      description: description.trim(),
       location: {
         address: address.trim(),
         lat: coords.lat,
         lng: coords.lng
       },
-      photoUrl: photoUrl || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80",
-      status: "Received",
-      reportedBy: "Citizen User",
-      createdAt: new Date().toISOString(),
-      upvotes: 1,
-      assignedDepartment: "Pending Department Assignment",
-      timeline: [
-        {
-          status: "Received",
-          timestamp: new Date().toISOString(),
-          note: "Complaint submitted successfully by citizen."
-        }
-      ],
-      authorityNotes: "New complaint queued for review."
+      photoUrl
     };
 
-    onSubmitComplaint(newComplaint);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      if (await onSubmitComplaint(newComplaint)) onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -239,6 +237,11 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
               style={{ marginBottom: '8px' }}
               required
             />
+            {coords && (
+              <p style={{ margin: '0 0 8px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                Map pin selected: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}. Add a street or landmark above.
+              </p>
+            )}
 
             <MapView 
               isPickerMode={true} 
@@ -260,8 +263,8 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           </div>
 
           {/* Submit Button */}
-          <button type="submit" className="btn-primary">
-            <Upload size={18} /> Submit Complaint to Authorities
+          <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            <Upload size={18} /> {isSubmitting ? 'Submitting Report…' : 'Submit Complaint to Authorities'}
           </button>
         </form>
       </div>

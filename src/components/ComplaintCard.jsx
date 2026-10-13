@@ -4,11 +4,13 @@ import { ThumbsUp, MapPin, Clock, ShieldCheck, AlertTriangle, ChevronDown, Chevr
 export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModal, isAuthorityMode, onAddRating }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [userRating, setUserRating] = useState(complaint.citizenRating || 0);
+  const canInteract = isAuthorityMode || complaint.isMine === true;
 
   const getStatusClass = (status) => {
     switch (status) {
       case 'Received': return 'status-received';
       case 'In Progress': return 'status-inprogress';
+      case 'On Hold': return 'status-onhold';
       case 'Completed': return 'status-completed';
       case 'Resolved': return 'status-completed';
       case 'Rejected': return 'status-rejected';
@@ -107,13 +109,13 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       {/* Department Assignment Info */}
       <div className="department-line" style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'var(--bg-primary)', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
         <ShieldCheck size={14} color="#38bdf8" />
-        <span>Dept: <strong>{complaint.assignedDepartment || "Pending Officer Review"}</strong></span>
+        <span>Dept: <strong>{complaint.assignedDepartment || "Pending Department Assignment"}</strong></span>
       </div>
 
       {/* Upvotes, Share & Expand Controls */}
       <div className="complaint-actions" style={{ paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
         <div>
-          <button 
+          {canInteract && <button
             onClick={() => onUpvote(complaint.id)}
             style={{
               background: 'var(--bg-primary)',
@@ -131,7 +133,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           >
             <ThumbsUp size={13} color="#38bdf8" />
             <span>Upvote ({complaint.upvotes || 1})</span>
-          </button>
+          </button>}
 
           <button 
             onClick={handleShare}
@@ -225,8 +227,9 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
                     size={20} 
                     color={star <= (userRating || complaint.citizenRating || 0) ? "#f59e0b" : "#475569"} 
                     fill={star <= (userRating || complaint.citizenRating || 0) ? "#f59e0b" : "none"}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: canInteract ? 'pointer' : 'default' }}
                     onClick={() => {
+                      if (!canInteract) return;
                       setUserRating(star);
                       onAddRating && onAddRating(complaint.id, star);
                     }}

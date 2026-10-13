@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Shield, CheckCircle2, Clock, AlertTriangle, Layers, Filter, FileText, Camera, Upload, X } from 'lucide-react';
 import ComplaintCard from './ComplaintCard';
 import { STATUS_TYPES } from '../data/mockComplaints';
@@ -18,6 +18,14 @@ export default function AuthorityDashboard({
   const [assignedDept, setAssignedDept] = useState('');
   const [proofPhoto, setProofPhoto] = useState('');
 
+  useEffect(() => {
+    if (!selectedComplaintForModal) return;
+    setNewStatus(selectedComplaintForModal.status);
+    setDepartmentNote(selectedComplaintForModal.authorityNotes || '');
+    setAssignedDept(selectedComplaintForModal.assignedDepartment || '');
+    setProofPhoto(selectedComplaintForModal.proofPhotoUrl || '');
+  }, [selectedComplaintForModal]);
+
   // Analytics
   const total = complaints.length;
   const pendingCount = complaints.filter(c => c.status === 'Received').length;
@@ -32,10 +40,6 @@ export default function AuthorityDashboard({
 
   const handleOpenActionModal = (complaint) => {
     onOpenModal(complaint);
-    setNewStatus(complaint.status);
-    setDepartmentNote(complaint.authorityNotes || '');
-    setAssignedDept(complaint.assignedDepartment || 'PWD Road Repair Wing');
-    setProofPhoto(complaint.proofPhotoUrl || '');
   };
 
   const handleSaveStatus = async (e) => {
@@ -61,7 +65,7 @@ export default function AuthorityDashboard({
           </div>
           <div>
             <h2 style={{ fontSize: '1.1rem', color: '#f8fafc' }}>Road Authority Management Portal</h2>
-            <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Municipal Corporation & PWD Command Center</p>
+            <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Complaint review and repair progress management</p>
           </div>
         </div>
 
@@ -95,7 +99,7 @@ export default function AuthorityDashboard({
 
       {/* Filter Tabs */}
       <div className="chip-row">
-        {['All', 'Received', 'In Progress', 'Completed'].map(st => (
+        {['All', 'Received', 'In Progress', 'On Hold', 'Completed', 'Rejected'].map(st => (
           <button
             key={st}
             onClick={() => setFilterStatus(st)}
@@ -167,7 +171,7 @@ export default function AuthorityDashboard({
                   className="form-input" 
                   value={assignedDept} 
                   onChange={(e) => setAssignedDept(e.target.value)}
-                  placeholder="e.g. PWD Asphalt Patching Unit 3"
+                  placeholder="e.g. Road maintenance team"
                 />
               </div>
 

@@ -116,4 +116,4 @@ export const ROAD_CATEGORIES = [
 
 export const SEVERITY_LEVELS = ["Low", "Medium", "High", "Critical"];
 
-export const STATUS_TYPES = ["Received", "In Progress", "Completed", "Rejected"];
+export const STATUS_TYPES = ["Received", "In Progress", "On Hold", "Completed", "Resolved", "Rejected"];

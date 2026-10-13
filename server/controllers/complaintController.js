@@ -14,6 +14,17 @@ export class ComplaintController {
     }
   }
 
+  async listCommunityComplaints(req, res, next) {
+    try {
+      const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
+      const skip = Math.max(parseInt(req.query.skip) || 0, 0);
+      const complaints = await complaintService.listCommunityComplaints(req.user._id, { limit, skip });
+      res.json(complaints);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getComplaint(req, res, next) {
     try {
       const complaint = await complaintService.getComplaintById(req.params.id);

@@ -33,6 +33,21 @@ export class ComplaintService {
     return complaints.map(doc => ({ ...doc, id: doc.id || doc._id?.toString() }));
   }
 
+  async listCommunityComplaints(userId, options = {}) {
+    const { limit = 100, skip = 0 } = options;
+    const complaints = await Complaint.find()
+      .select('id title category severity isHazardous description location photoUrl proofPhotoUrl status createdAt upvotes citizenRating assignedDepartment timeline reportedByUserId')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean();
+    return complaints.map(({ reportedByUserId, ...doc }) => ({
+      ...doc,
+      id: doc.id || doc._id?.toString(),
+      isMine: String(reportedByUserId) === String(userId)
+    }));
+  }
+
   async getComplaintById(complaintId) {
     const complaint = await Complaint.findOne(complaintLookup(complaintId)).lean();
     if (!complaint) {
