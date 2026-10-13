@@ -1,0 +1,76 @@
+.bottom-nav.authority-nav {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nav-report-button {
+  margin-top: 0;
+}
+
+.status-onhold {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid #86efac;
+  outline-offset: 3px;
+}
+
+@media (max-width: 800px) {
+  .landing-nav {
+    flex-wrap: wrap;
+  }
+
+  .landing-nav-links {
+    display: flex;
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: space-between;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+
+  .landing-nav-links a {
+    white-space: nowrap;
+  }
+
+  .landing-hero {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    padding-block: 52px 68px;
+  }
+
+  .landing-visual {
+    min-height: 380px;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 760px) {
+  .landing-feature-grid,
+  .landing-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .landing-step:not(:last-child)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-hero {
+    padding-block: 38px 58px;
+  }
+
+  .landing-visual {
+    min-height: 350px;
+  }
+
+  .landing-hero-actions .landing-button {
+    width: 100%;
+  }
+}

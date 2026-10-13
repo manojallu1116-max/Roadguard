@@ -71,6 +71,15 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
   const [selectedPos, setSelectedPos] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
 
+  useEffect(() => {
+    if (!initialPos) {
+      if (isPickerMode) setSelectedPos(null);
+      return;
+    }
+    setCurrentPos(initialPos);
+    if (isPickerMode) setSelectedPos(initialPos);
+  }, [initialPos, isPickerMode]);
+
   const handleGetLiveLocation = () => {
     setIsLocating(true);
     if ("geolocation" in navigator) {
@@ -88,7 +97,7 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
           }
         },
         (error) => {
-          console.warn("GPS Geolocation failed/denied, defaulting to city center", error);
+          console.warn("GPS geolocation failed or permission was denied.", error);
           setIsLocating(false);
         },
         { enableHighAccuracy: true, timeout: 5000 }
@@ -125,7 +134,12 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
         )}
 
         {/* Render Complaint Pin Markers */}
-        {!isPickerMode && complaints && complaints.map((c) => (
+        {!isPickerMode && complaints && complaints.filter(c => (
+          Number.isFinite(c.location?.lat) &&
+          Number.isFinite(c.location?.lng) &&
+          c.location.lat >= -90 && c.location.lat <= 90 &&
+          c.location.lng >= -180 && c.location.lng <= 180
+        )).map((c) => (
           <Marker
             key={c.id}
             position={[c.location.lat, c.location.lng]}

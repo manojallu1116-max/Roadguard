@@ -6,26 +6,27 @@ import MapView from './components/MapView';
 import NewComplaintModal from './components/NewComplaintModal';
 import AuthorityDashboard from './components/AuthorityDashboard';
 import { ROAD_CATEGORIES } from './data/mockComplaints';
-import { Plus, Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
-const API = import.meta.env.VITE_API_URL || "";
+import { apiUrl, parseApiResponse } from './api';
 
 async function getApiError(response, fallback) {
   try {
-    const payload = await response.json();
+    const payload = await parseApiResponse(response);
     const details = Array.isArray(payload.details)
       ? payload.details.map(item => item.message).filter(Boolean).join(' ')
       : '';
     if (details) return `${payload.error || fallback}: ${details}`;
     return payload.error || payload.message || fallback;
-  } catch (_error) {
-    return fallback;
+  } catch (error) {
+    return error.message || fallback;
   }
 }
 
 export default function App() {
   const { user, logout } = useAuth();
   const [complaints, setComplaints] = useState([]);
+  const [myComplaints, setMyComplaints] = useState([]);
   const isAuthority = (user?.role === 'admin' || user?.role === 'authority') && user.isApproved;
   const [theme, setTheme] = useState('dark');
   const [activeTab, setActiveTab] = useState(isAuthority ? 'admin' : 'feed'); // 'feed', 'map', 'admin', 'my-reports'
@@ -44,11 +45,15 @@ export default function App() {
   useEffect(() => {
     const loadComplaints = async () => {
       try {
-        const endpoint = isAuthority ? '/api/complaints' : '/api/complaints/mine';
-        const response = await fetch(`${API}${endpoint}`, { headers: authHeaders() });
-        if (!response.ok) throw new Error(`Unable to load reports (${response.status})`);
-        const data = await response.json();
-        setComplaints(data);
+        const endpoints = isAuthority
+          ? ['/api/complaints']
+          : ['/api/complaints/community', '/api/complaints/mine'];
+        const responses = await Promise.all(endpoints.map(endpoint => fetch(apiUrl(endpoint), { headers: authHeaders() })));
+        const failedResponse = responses.find(response => !response.ok);
+        if (failedResponse) throw new Error(await getApiError(failedResponse, `Unable to load reports (${failedResponse.status})`));
+        const data = await Promise.all(responses.map(parseApiResponse));
+        setComplaints(data[0]);
+        setMyComplaints(isAuthority ? [] : data[1].map(complaint => ({ ...complaint, isMine: true })));
       } catch (error) {
         console.error('Failed to load complaints', error);
       }
@@ -74,7 +79,7 @@ export default function App() {
 
   const handleAddComplaint = async (newComplaint) => {
     try {
-      const response = await fetch(`${API}/api/complaints`, {
+      const response = await fetch(apiUrl('/api/complaints'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(newComplaint)
@@ -82,13 +87,16 @@ export default function App() {
       if (!response.ok) {
         throw new Error(await getApiError(response, `Unable to submit report (${response.status})`));
       }
-      const createdComplaint = await response.json();
-      setComplaints([createdComplaint, ...complaints]);
-      setActiveTab('feed');
+      const createdComplaint = await parseApiResponse(response);
+      setComplaints(current => [{ ...createdComplaint, isMine: true }, ...current]);
+      setMyComplaints(current => [{ ...createdComplaint, isMine: true }, ...current]);
+      setActiveTab('my-reports');
       showToast(`Complaint #${createdComplaint.id} submitted successfully!`);
+      return true;
     } catch (error) {
       console.error('Failed to create complaint:', error);
       showToast(error.message || 'Unable to save your report right now.');
+      return false;
     }
   };
 
@@ -96,7 +104,7 @@ export default function App() {
     try {
       const complaint = complaints.find((c) => c.id === complaintId);
       if (!complaint) return;
-      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
+      const response = await fetch(apiUrl(`/api/complaints/${complaintId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ upvotes: (complaint.upvotes || 0) + 1 })
@@ -104,8 +112,9 @@ export default function App() {
       if (!response.ok) {
         throw new Error(await getApiError(response, `Unable to upvote (${response.status})`));
       }
-      const updated = await response.json();
-      setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
+      const updated = await parseApiResponse(response);
+      setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
+      setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       showToast('Upvoted! Thank you for prioritizing this issue.');
     } catch (error) {
       console.error('Failed to upvote:', error);
@@ -115,7 +124,7 @@ export default function App() {
 
   const handleAddRating = async (complaintId, rating) => {
     try {
-      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
+      const response = await fetch(apiUrl(`/api/complaints/${complaintId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ citizenRating: rating })
@@ -123,8 +132,9 @@ export default function App() {
       if (!response.ok) {
         throw new Error(await getApiError(response, `Unable to save rating (${response.status})`));
       }
-      const updated = await response.json();
-      setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
+      const updated = await parseApiResponse(response);
+      setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
+      setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       showToast(`Rating recorded: ${rating} Star(s)!`);
     } catch (error) {
       console.error('Failed to save rating:', error);
@@ -143,7 +153,7 @@ export default function App() {
         note: note || `Status updated to ${status} by authority.`
       });
 
-      const response = await fetch(`${API}/api/complaints/${complaintId}`, {
+      const response = await fetch(apiUrl(`/api/complaints/${complaintId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
@@ -157,9 +167,10 @@ export default function App() {
       if (!response.ok) {
         throw new Error(await getApiError(response, `Unable to update complaint (${response.status})`));
       }
-      const updated = await response.json();
+      const updated = await parseApiResponse(response);
 
-      setComplaints(complaints.map((c) => c.id === complaintId ? updated : c));
+      setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
+      setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       showToast(`Updated Complaint #${complaintId} status to "${status}"`);
       return true;
     } catch (error) {
@@ -171,6 +182,7 @@ export default function App() {
 
   // Filter complaints for feed view
   const filteredComplaints = complaints.filter(c => {
+    if (c.isMine) return false;
     const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           c.location.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           c.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -202,23 +214,17 @@ export default function App() {
       {/* Main Content Area */}
       <main className="content-area">
         {/* FEED TAB */}
-        {activeTab === 'feed' && (
+        {!isAuthority && activeTab === 'feed' && (
           <div>
             {/* Quick Hero Banner */}
             <div className="card hero-card">
               <div className="hero-content">
                 <div className="hero-copy">
-                  <h2 className="hero-title">{isAuthority ? 'Road Damage Overview' : 'My Road Report Status'}</h2>
+                  <h2 className="hero-title">Community Road Reports</h2>
                   <p className="hero-text">
-                    {isAuthority ? 'Review reports and coordinate repair progress.' : 'Submit an issue and follow every repair update here.'}
+                    Browse road issues reported by other members of your community.
                   </p>
                 </div>
-                <button 
-                  onClick={() => setIsReportModalOpen(true)}
-                  className="hero-report-button"
-                >
-                  + New Report
-                </button>
               </div>
             </div>
 
@@ -308,8 +314,15 @@ export default function App() {
             <MapView 
               complaints={complaints} 
               onSelectComplaint={(c) => {
-                setActiveTab('feed');
-                setSearchQuery(c.id);
+                if (isAuthority) {
+                  setSelectedComplaintForModal(c);
+                  setActiveTab('admin');
+                } else if (c.isMine) {
+                  setActiveTab('my-reports');
+                } else {
+                  setActiveTab('feed');
+                  setSearchQuery(c.id);
+                }
               }}
             />
           </div>
@@ -328,13 +341,18 @@ export default function App() {
         )}
 
         {/* MY ACTIVITY TAB */}
-        {activeTab === 'my-reports' && (
+        {!isAuthority && activeTab === 'my-reports' && (
           <div>
             <div className="card" style={{ background: 'var(--bg-card)', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>My Submitted Activity</h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Your submitted reports and their latest repair status</p>
             </div>
-            {complaints.map(comp => (
+            {myComplaints.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                <AlertOctagon size={36} style={{ opacity: 0.5, marginBottom: '8px' }} />
+                <p>You have not submitted any reports yet.</p>
+              </div>
+            ) : myComplaints.map(comp => (
               <ComplaintCard 
                 key={comp.id} 
                 complaint={comp} 
@@ -347,11 +365,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* Floating Action Button */}
-      <button className="fab-report" onClick={() => setIsReportModalOpen(true)} title="File New Complaint">
-        <Plus size={28} />
-      </button>
 
       {/* New Complaint Modal */}
       <NewComplaintModal 

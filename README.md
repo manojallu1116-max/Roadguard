@@ -1,12 +1,11 @@
 # Road Damage Reporter
 
-A live-ready road maintenance reporting app with a React frontend and a lightweight JSON-backed backend for persistent complaint storage.
+A road maintenance reporting app with a React frontend and an Express API backed by MongoDB.
 
 ## What changed
-- Added a Node/Express API for complaint persistence
-- Wired the UI to load and save reports from the backend
-- Added a simple backend regression test
-- Added production-friendly scripts and deployment files
+- Citizens can browse community reports and view only their own reports in My Activity.
+- Approved administrators manage all reports, assignments, notes, and status updates from the Admin dashboard.
+- Complaint images and locations are supplied with each report; map pins use saved coordinates.
 
 ## Run locally
 1. Install dependencies: npm install
@@ -21,11 +20,12 @@ The API runs at http://localhost:3001/api/complaints.
 - npm run start
 
 ## Deploy
-This project is ready for deployment on Render (API) and Vercel (client), or as a single Render deployment.
+This project uses separate Render (API) and Vercel (client) deployments.
 - Set the start command to: npm start
 - The Render service is API-only. Its root URL returns `{ "message": "RoadGuard API is running" }`; it does not require or serve a `dist/` frontend directory.
 - Set `MONGODB_URI`, `DB_NAME`, `JWT_SECRET`, and optional `JWT_EXPIRES_IN` in the Render environment.
-- On Vercel, set `VITE_API_URL` to the deployed Render API origin (for example `https://roadguard-api.onrender.com`).
+- On Vercel, set `VITE_API_URL` to the deployed Render API origin (for example `https://roadguard-api.onrender.com`). The frontend reports a configuration error instead of treating Vercel's SPA fallback as an API response when this value is missing.
+- Optionally set `VITE_SUPPORT_EMAIL` on Vercel to display a support email on the landing page. No email address is assumed by the app.
 - Ensure the platform exposes port 3001 or uses the PORT environment variable.
 
 ## Authentication
@@ -33,8 +33,7 @@ This project is ready for deployment on Render (API) and Vercel (client), or as 
 - `POST /api/auth/login` returns a JWT for citizens and approved authorities only.
 - To make an existing account an administrator, update it directly in MongoDB with `role: "admin"` and `isApproved: true`. The app never exposes a role selector or role-update API.
 - The client stores the JWT in localStorage and routes users to `/citizen` (their own report statuses) or `/admin` (all reports and management controls). Legacy `authority` records are still accepted as admins.
-- New reports are linked to the authenticated user server-side. Citizens can retrieve only their own reports through `GET /api/complaints/mine`; admins can retrieve the full report list.
+- New reports are linked to the authenticated user server-side. `GET /api/complaints/community` requires authentication and returns community report details without reporter identity or internal authority notes; `GET /api/complaints/mine` returns the signed-in citizen's own reports. Only approved administrators can retrieve the full report list or update administrative fields.
 
 ## Notes
-- Complaints are stored in data/complaints.json
-- The app uses the existing mock seed data as the initial dataset
+- Complaint documents are stored in MongoDB. `data/complaints.json` and `src/data/mockComplaints.js` are sample/local artifacts and are not automatically imported into MongoDB.

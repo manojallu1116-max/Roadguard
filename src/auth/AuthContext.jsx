@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { apiUrl, parseApiResponse } from '../api';
 
 const AuthContext = createContext(null);
-const API = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'roadguard.jwt';
 
 export function AuthProvider({ children }) {
@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     try {
-      if (token) await fetch(`${API}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      if (token) await fetch(apiUrl('/api/auth/logout'), { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (_error) {
       // Local logout must still succeed if the API is unavailable.
     } finally {
@@ -21,10 +21,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async credentials => {
-    const response = await fetch(`${API}/api/auth/login`, {
+    const response = await fetch(apiUrl('/api/auth/login'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials)
     });
-    const data = await response.json();
+    const data = await parseApiResponse(response);
     if (!response.ok) throw new Error(data.error || 'Unable to sign in');
     localStorage.setItem(TOKEN_KEY, data.token);
     setUser(data.user);
@@ -32,10 +32,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(async details => {
-    const response = await fetch(`${API}/api/auth/register`, {
+    const response = await fetch(apiUrl('/api/auth/register'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(details)
     });
-    const data = await response.json();
+    const data = await parseApiResponse(response);
     if (!response.ok) throw new Error(data.error || 'Unable to register');
     return data;
   }, []);
@@ -45,12 +45,16 @@ export function AuthProvider({ children }) {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return setIsLoading(false);
       try {
-        const response = await fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!response.ok) throw new Error('Session expired');
-        const data = await response.json();
+        const response = await fetch(apiUrl('/api/auth/me'), { headers: { Authorization: `Bearer ${token}` } });
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem(TOKEN_KEY);
+          return;
+        }
+        if (!response.ok) throw new Error(`Unable to restore session (${response.status})`);
+        const data = await parseApiResponse(response);
         setUser(data.user);
-      } catch (_error) {
-        localStorage.removeItem(TOKEN_KEY);
+      } catch (error) {
+        console.error('Failed to restore session:', error);
       } finally { setIsLoading(false); }
     };
     restoreSession();
