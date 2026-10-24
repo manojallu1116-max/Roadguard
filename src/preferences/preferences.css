@@ -163,3 +163,50 @@ html[data-theme="light"] .map-container-box > div[style*="position: absolute"][s
     max-width: 68px;
   }
 }
+/* Complaint photo actions */
+.photo-upload-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.photo-upload-button {
+  position: relative;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.photo-upload-button input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-upload-button:focus-within {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.photo-demo-button {
+  grid-column: 1 / -1;
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  .photo-upload-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .photo-demo-button {
+    grid-column: auto;
+  }
+}
