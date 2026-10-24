@@ -9,6 +9,7 @@ import { ROAD_CATEGORIES } from './data/mockComplaints';
 import { Search, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
 import { apiUrl, parseApiResponse } from './api';
+import { usePreferences } from './preferences/PreferencesContext';
 
 async function getApiError(response, fallback) {
   try {
@@ -25,10 +26,10 @@ async function getApiError(response, fallback) {
 
 export default function App() {
   const { user, logout } = useAuth();
+  const { t } = usePreferences();
   const [complaints, setComplaints] = useState([]);
   const [myComplaints, setMyComplaints] = useState([]);
   const isAuthority = (user?.role === 'admin' || user?.role === 'authority') && user.isApproved;
-  const [theme, setTheme] = useState('dark');
   const [activeTab, setActiveTab] = useState(isAuthority ? 'admin' : 'feed'); // 'feed', 'map', 'admin', 'my-reports'
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedComplaintForModal, setSelectedComplaintForModal] = useState(null);
@@ -50,7 +51,7 @@ export default function App() {
           : ['/api/complaints/community', '/api/complaints/mine'];
         const responses = await Promise.all(endpoints.map(endpoint => fetch(apiUrl(endpoint), { headers: authHeaders() })));
         const failedResponse = responses.find(response => !response.ok);
-        if (failedResponse) throw new Error(await getApiError(failedResponse, `Unable to load reports (${failedResponse.status})`));
+        if (failedResponse) throw new Error(await getApiError(failedResponse, t('Unable to load reports ({status})', { status: failedResponse.status })));
         const data = await Promise.all(responses.map(parseApiResponse));
         setComplaints(data[0]);
         setMyComplaints(isAuthority ? [] : data[1].map(complaint => ({ ...complaint, isMine: true })));
@@ -62,19 +63,11 @@ export default function App() {
     loadComplaints();
   }, [isAuthority]);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 4000);
-  };
-
-  const handleToggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   const handleAddComplaint = async (newComplaint) => {
@@ -85,17 +78,17 @@ export default function App() {
         body: JSON.stringify(newComplaint)
       });
       if (!response.ok) {
-        throw new Error(await getApiError(response, `Unable to submit report (${response.status})`));
+        throw new Error(await getApiError(response, t('Unable to submit report ({status})', { status: response.status })));
       }
       const createdComplaint = await parseApiResponse(response);
       setComplaints(current => [{ ...createdComplaint, isMine: true }, ...current]);
       setMyComplaints(current => [{ ...createdComplaint, isMine: true }, ...current]);
       setActiveTab('my-reports');
-      showToast(`Complaint #${createdComplaint.id} submitted successfully!`);
+      showToast(t('Complaint #{id} submitted successfully!', { id: createdComplaint.id }));
       return true;
     } catch (error) {
       console.error('Failed to create complaint:', error);
-      showToast(error.message || 'Unable to save your report right now.');
+      showToast(t(error.message || 'Unable to save your report right now.'));
       return false;
     }
   };
@@ -110,15 +103,15 @@ export default function App() {
         body: JSON.stringify({ upvotes: (complaint.upvotes || 0) + 1 })
       });
       if (!response.ok) {
-        throw new Error(await getApiError(response, `Unable to upvote (${response.status})`));
+        throw new Error(await getApiError(response, t('Unable to upvote ({status})', { status: response.status })));
       }
       const updated = await parseApiResponse(response);
       setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
-      showToast('Upvoted! Thank you for prioritizing this issue.');
+      showToast(t('Upvoted! Thank you for prioritizing this issue.'));
     } catch (error) {
       console.error('Failed to upvote:', error);
-      showToast(error.message || 'Unable to upvote this report.');
+      showToast(t(error.message || 'Unable to upvote this report.'));
     }
   };
 
@@ -130,15 +123,15 @@ export default function App() {
         body: JSON.stringify({ citizenRating: rating })
       });
       if (!response.ok) {
-        throw new Error(await getApiError(response, `Unable to save rating (${response.status})`));
+        throw new Error(await getApiError(response, t('Unable to save rating ({status})', { status: response.status })));
       }
       const updated = await parseApiResponse(response);
       setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
-      showToast(`Rating recorded: ${rating} Star(s)!`);
+      showToast(t('Rating recorded: {rating} Star(s)!', { rating }));
     } catch (error) {
       console.error('Failed to save rating:', error);
-      showToast(error.message || 'Unable to save rating.');
+      showToast(t(error.message || 'Unable to save rating.'));
     }
   };
 
@@ -165,17 +158,17 @@ export default function App() {
         })
       });
       if (!response.ok) {
-        throw new Error(await getApiError(response, `Unable to update complaint (${response.status})`));
+        throw new Error(await getApiError(response, t('Unable to update complaint ({status})', { status: response.status })));
       }
       const updated = await parseApiResponse(response);
 
       setComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
       setMyComplaints(current => current.map(c => c.id === complaintId ? { ...c, ...updated } : c));
-      showToast(`Updated Complaint #${complaintId} status to "${status}"`);
+      showToast(t('Updated Complaint #{id} status to "{status}"', { id: complaintId, status: t(status) }));
       return true;
     } catch (error) {
       console.error('Failed to update status:', error);
-      showToast(error.message || 'Unable to update the complaint status.');
+      showToast(t(error.message || 'Unable to update the complaint status.'));
       return false;
     }
   };
@@ -207,8 +200,6 @@ export default function App() {
       <Navbar 
         user={user}
         onLogout={logout}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main Content Area */}
@@ -220,9 +211,9 @@ export default function App() {
             <div className="card hero-card">
               <div className="hero-content">
                 <div className="hero-copy">
-                  <h2 className="hero-title">Community Road Reports</h2>
+                  <h2 className="hero-title">{t('Community Road Reports')}</h2>
                   <p className="hero-text">
-                    Browse road issues reported by other members of your community.
+                        {t('Browse road issues reported by other members of your community.')}
                   </p>
                 </div>
               </div>
@@ -235,7 +226,7 @@ export default function App() {
                 <input 
                   type="text" 
                   className="form-input" 
-                  placeholder="Search by area, road name, or complaint ID..." 
+                  placeholder={t('Search by area, road name, or complaint ID...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ paddingLeft: '36px' }}
@@ -258,7 +249,7 @@ export default function App() {
                   whiteSpace: 'nowrap'
                 }}
               >
-                All Issues
+                {t('All Issues')}
               </button>
               {ROAD_CATEGORIES.map(cat => (
                 <button
@@ -276,7 +267,7 @@ export default function App() {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {cat}
+                  {t(cat)}
                 </button>
               ))}
             </div>
@@ -285,7 +276,7 @@ export default function App() {
             {filteredComplaints.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                 <AlertOctagon size={40} style={{ opacity: 0.4, marginBottom: '8px' }} />
-                <p>No road damage reports match your search criteria.</p>
+                <p>{t('No road damage reports match your search criteria.')}</p>
               </div>
             ) : (
               filteredComplaints.map(comp => (
@@ -307,8 +298,8 @@ export default function App() {
           <div>
             <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Interactive Damage Map</h2>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Showing all registered potholes & hazard spots</p>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{t('Interactive Damage Map')}</h2>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('Showing all registered potholes & hazard spots')}</p>
               </div>
             </div>
             <MapView 
@@ -344,13 +335,13 @@ export default function App() {
         {!isAuthority && activeTab === 'my-reports' && (
           <div>
             <div className="card" style={{ background: 'var(--bg-card)', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>My Submitted Activity</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Your submitted reports and their latest repair status</p>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{t('My Submitted Activity')}</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('Your submitted reports and their latest repair status')}</p>
             </div>
             {myComplaints.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                 <AlertOctagon size={36} style={{ opacity: 0.5, marginBottom: '8px' }} />
-                <p>You have not submitted any reports yet.</p>
+                <p>{t('You have not submitted any reports yet.')}</p>
               </div>
             ) : myComplaints.map(comp => (
               <ComplaintCard 

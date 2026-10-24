@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ThumbsUp, MapPin, Clock, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Share2, Star, CheckCircle } from 'lucide-react';
+import { usePreferences } from '../preferences/PreferencesContext';
 
 export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModal, isAuthorityMode, onAddRating }) {
+  const { language, t } = usePreferences();
   const [isExpanded, setIsExpanded] = useState(false);
   const [userRating, setUserRating] = useState(complaint.citizenRating || 0);
   const canInteract = isAuthorityMode || complaint.isMine === true;
@@ -31,19 +33,20 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
   const formatDate = (isoString) => {
     if (!isoString) return '';
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const locale = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-US';
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: `Road Damage Report: ${complaint.title}`,
-        text: `Reported damaged road at ${complaint.location.address}. Status: ${complaint.status}`,
+        title: t('Road Damage Report: {title}', { title: complaint.title }),
+        text: t('Reported damaged road at {address}. Status: {status}', { address: complaint.location.address, status: t(complaint.status) }),
         url: window.location.href,
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(`${complaint.title} - ${complaint.location.address}`);
-      alert("Report details copied to clipboard!");
+      alert(t('Report details copied to clipboard!'));
     }
   };
 
@@ -60,21 +63,21 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           </h3>
         </div>
         <span className={`status-pill ${getStatusClass(complaint.status)}`}>
-          {complaint.status}
+          {t(complaint.status)}
         </span>
       </div>
 
       {/* Category & Hazard Tags */}
       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
         <span className={`severity-pill ${getSeverityClass(complaint.severity)}`}>
-          {complaint.severity} Severity
+          {t(complaint.severity)} {t('Severity')}
         </span>
         <span style={{ fontSize: '0.7rem', background: 'var(--bg-primary)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-          {complaint.category}
+          {t(complaint.category)}
         </span>
         {complaint.isHazardous && (
           <span style={{ fontSize: '0.7rem', background: 'rgba(220, 38, 38, 0.2)', color: '#ef4444', border: '1px solid rgba(220, 38, 38, 0.4)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <AlertTriangle size={10} /> Emergency Hazard
+            <AlertTriangle size={10} /> {t('Emergency Hazard')}
           </span>
         )}
       </div>
@@ -109,7 +112,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       {/* Department Assignment Info */}
       <div className="department-line" style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'var(--bg-primary)', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
         <ShieldCheck size={14} color="#38bdf8" />
-        <span>Dept: <strong>{complaint.assignedDepartment || "Pending Department Assignment"}</strong></span>
+        <span>{t('Dept:')} <strong>{complaint.assignedDepartment || t('Pending Department Assignment')}</strong></span>
       </div>
 
       {/* Upvotes, Share & Expand Controls */}
@@ -132,7 +135,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
             }}
           >
             <ThumbsUp size={13} color="#38bdf8" />
-            <span>Upvote ({complaint.upvotes || 1})</span>
+            <span>{t('Upvote ({count})', { count: complaint.upvotes || 1 })}</span>
           </button>}
 
           <button 
@@ -146,7 +149,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
               fontSize: '0.75rem',
               cursor: 'pointer'
             }}
-            title="Share complaint"
+            title={t('Share complaint')}
           >
             <Share2 size={13} />
           </button>
@@ -156,7 +159,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           onClick={() => setIsExpanded(!isExpanded)}
           style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
         >
-          {isExpanded ? 'Hide Details' : 'View Timeline'}
+          {isExpanded ? t('Hide Details') : t('View Timeline')}
           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
@@ -169,7 +172,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
             className="btn-primary"
             style={{ background: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)', fontSize: '0.85rem', padding: '10px' }}
           >
-            Update Complaint Status & Notes
+            {t('Update Complaint Status & Notes')}
           </button>
         </div>
       )}
@@ -178,7 +181,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
       {isExpanded && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
           <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.5px' }}>
-            Repair Status Timeline
+            {t('Repair Status Timeline')}
           </h4>
 
           <div className="timeline">
@@ -186,7 +189,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
               <div key={idx} className={`timeline-item ${idx === complaint.timeline.length - 1 ? 'active' : 'completed'}`}>
                 <div className="timeline-dot" />
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  {step.status}
+                  {t(step.status)}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                   {formatDate(step.timestamp)}
@@ -204,11 +207,11 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           {complaint.proofPhotoUrl && (
             <div style={{ marginTop: '14px', background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#34d399', marginBottom: '8px' }}>
-                <CheckCircle size={15} /> Official Completion Proof Photo
+                <CheckCircle size={15} /> {t('Official Completion Proof Photo')}
               </div>
               <img 
                 src={complaint.proofPhotoUrl} 
-                alt="Repair Proof" 
+                alt={t('Repair Proof')}
                 style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px' }} 
               />
             </div>
@@ -218,7 +221,7 @@ export default function ComplaintCard({ complaint, onUpvote, onOpenAuthorityModa
           {['Completed', 'Resolved'].includes(complaint.status) && (
             <div style={{ marginTop: '14px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-                Citizen Feedback & Satisfaction Rating:
+                {t('Citizen Feedback & Satisfaction Rating:')}
               </span>
               <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
                 {[1, 2, 3, 4, 5].map((star) => (

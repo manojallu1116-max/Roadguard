@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Navigation, AlertTriangle, CheckCircle, Clock, MapPin, Eye } from 'lucide-react';
+import { usePreferences } from '../preferences/PreferencesContext';
 
 // Fix default Leaflet icon paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -66,10 +67,19 @@ function ChangeView({ center }) {
   return null;
 }
 
-export default function MapView({ complaints, onSelectComplaint, isPickerMode, onLocationSelect, initialPos }) {
+function getGeolocationErrorMessage(error) {
+  if (error.code === 1) return 'Location permission was denied.';
+  if (error.code === 2) return 'Your current location is unavailable.';
+  if (error.code === 3) return 'The location request timed out.';
+  return 'Unable to retrieve your current location.';
+}
+
+export default function MapView({ complaints, onSelectComplaint, isPickerMode, onLocationSelect, onLocationError, locationRequestId = 0, initialPos }) {
+  const { t } = usePreferences();
   const [currentPos, setCurrentPos] = useState(initialPos || { lat: 12.9716, lng: 77.5946 });
   const [selectedPos, setSelectedPos] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
+  const lastLocationRequestId = useRef(0);
 
   useEffect(() => {
     if (!initialPos) {
@@ -80,9 +90,15 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
     if (isPickerMode) setSelectedPos(initialPos);
   }, [initialPos, isPickerMode]);
 
-  const handleGetLiveLocation = () => {
+  const handleGetLiveLocation = useCallback(() => {
     setIsLocating(true);
-    if ("geolocation" in navigator) {
+    if (!('geolocation' in navigator)) {
+      setIsLocating(false);
+      onLocationError?.('This browser does not support location detection.');
+      return;
+    }
+
+    try {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
@@ -90,27 +106,43 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
             lng: position.coords.longitude
           };
           setCurrentPos(pos);
-          setIsLocating(false);
           if (isPickerMode && onLocationSelect) {
             setSelectedPos(pos);
-            onLocationSelect(pos);
+            Promise.resolve()
+              .then(() => onLocationSelect(pos, 'gps'))
+              .catch((error) => {
+                console.error('Failed to process selected GPS location:', error);
+                onLocationError?.('Your coordinates were detected, but address lookup failed.');
+              })
+              .finally(() => setIsLocating(false));
+          } else {
+            setIsLocating(false);
           }
         },
         (error) => {
           console.warn("GPS geolocation failed or permission was denied.", error);
           setIsLocating(false);
+          onLocationError?.(getGeolocationErrorMessage(error));
         },
-        { enableHighAccuracy: true, timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
-    } else {
+    } catch (error) {
+      console.error('Unable to start browser geolocation:', error);
       setIsLocating(false);
+      onLocationError?.('Unable to start location detection.');
     }
-  };
+  }, [isPickerMode, onLocationError, onLocationSelect]);
+
+  useEffect(() => {
+    if (!locationRequestId || lastLocationRequestId.current === locationRequestId) return;
+    lastLocationRequestId.current = locationRequestId;
+    handleGetLiveLocation();
+  }, [handleGetLiveLocation, locationRequestId]);
 
   const handleMapClick = (latlng) => {
     if (isPickerMode && onLocationSelect) {
       setSelectedPos(latlng);
-      onLocationSelect(latlng);
+      onLocationSelect(latlng, 'map');
     }
   };
 
@@ -149,11 +181,11 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
               <div style={{ padding: '4px', maxWidth: '200px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                   <span className={`status-pill status-${c.status.toLowerCase().replace(' ', '')}`}>
-                    {c.status}
+                    {t(c.status)}
                   </span>
                   {c.isHazardous && (
                     <span style={{ background: '#ef4444', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
-                      HAZARD
+                      {t('HAZARD')}
                     </span>
                   )}
                 </div>
@@ -178,7 +210,7 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
                     gap: '4px'
                   }}
                 >
-                  <Eye size={12} /> View Details
+                  <Eye size={12} /> {t('View Details')}
                 </button>
               </div>
             </Popup>
@@ -206,7 +238,8 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
           cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}
-        title="Get Live GPS Location"
+        title={t('Get Live GPS Location')}
+        aria-label={t('Get Live GPS Location')}
       >
         <Navigation size={18} className={isLocating ? 'animate-spin' : ''} />
       </button>
@@ -226,7 +259,7 @@ export default function MapView({ complaints, onSelectComplaint, isPickerMode, o
           textAlign: 'center',
           border: '1px solid #334155'
         }}>
-          Tap anywhere on the map or use GPS to set damage location
+          {t('Tap anywhere on the map or use GPS to set damage location')}
         </div>
       )}
     </div>

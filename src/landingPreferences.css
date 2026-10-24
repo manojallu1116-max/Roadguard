@@ -1,4 +1,4 @@
-.landing-preferences {
+.preference-controls {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -8,8 +8,8 @@
   background: rgba(15, 30, 50, .72);
 }
 
-.landing-preference-button,
-.landing-language-control {
+.preference-theme-button,
+.preference-language-control {
   min-height: 36px;
   display: inline-flex;
   align-items: center;
@@ -21,25 +21,25 @@
   background: transparent;
 }
 
-.landing-preference-button {
+.preference-theme-button {
   width: 38px;
   cursor: pointer;
 }
 
-.landing-preference-button svg {
+.preference-theme-button svg {
   color: #fbbf24;
 }
 
-.landing-language-control {
+.preference-language-control {
   padding: 0 7px;
 }
 
-.landing-language-control svg {
+.preference-language-control svg {
   flex: 0 0 auto;
   color: #86efac;
 }
 
-.landing-language-control select {
+.preference-language-control select {
   max-width: 92px;
   border: 0;
   outline: 0;
@@ -50,18 +50,18 @@
   cursor: pointer;
 }
 
-.landing-language-control option {
+.preference-language-control option {
   color: #0f172a;
   background: #fff;
 }
 
-.landing-preference-button:hover,
-.landing-language-control:hover {
+.preference-theme-button:hover,
+.preference-language-control:hover {
   background: rgba(148, 163, 184, .14);
 }
 
-.landing-preference-button:focus-visible,
-.landing-language-control:focus-within {
+.preference-theme-button:focus-visible,
+.preference-language-control:focus-within {
   outline: 2px solid #4ade80;
   outline-offset: 2px;
 }
@@ -105,21 +105,21 @@
   box-shadow: 0 3px 12px rgba(15, 23, 42, .07);
 }
 
-.landing-page[data-landing-theme="light"] .landing-preference-button,
-.landing-page[data-landing-theme="light"] .landing-language-control {
+.landing-page[data-landing-theme="light"] .preference-theme-button,
+.landing-page[data-landing-theme="light"] .preference-language-control {
   color: #334155;
 }
 
-.landing-page[data-landing-theme="light"] .landing-preference-button svg {
+.landing-page[data-landing-theme="light"] .preference-theme-button svg {
   color: #4f46e5;
 }
 
-.landing-page[data-landing-theme="light"] .landing-language-control svg {
+.landing-page[data-landing-theme="light"] .preference-language-control svg {
   color: #047857;
 }
 
-.landing-page[data-landing-theme="light"] .landing-preference-button:hover,
-.landing-page[data-landing-theme="light"] .landing-language-control:hover {
+.landing-page[data-landing-theme="light"] .preference-theme-button:hover,
+.landing-page[data-landing-theme="light"] .preference-language-control:hover {
   background: #f1f5f9;
 }
 
@@ -280,12 +280,12 @@
     gap: 2px;
   }
 
-  .landing-language-control {
+  .preference-language-control {
     gap: 4px;
     padding-inline: 5px;
   }
 
-  .landing-language-control select {
+  .preference-language-control select {
     max-width: 76px;
   }
 }

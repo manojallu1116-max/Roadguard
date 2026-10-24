@@ -1,9 +1,11 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { usePreferences } from '../preferences/PreferencesContext';
 
 export default function ProtectedRoute({ requiredRole }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div className="auth-loading">Loading RoadGuard…</div>;
+  const { t } = usePreferences();
+  if (isLoading) return <div className="auth-loading">{t('Loading RoadGuard…')}</div>;
   if (!user) return <Navigate to="/login" replace />;
   const isAdmin = (user.role === 'admin' || user.role === 'authority') && user.isApproved;
   if (requiredRole === 'admin' && !isAdmin) {

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  AlertTriangle, ArrowRight, CheckCircle2, Clock3, Languages, Mail,
-  MapPinned, Moon, Navigation, Route, ShieldCheck, Sun, UsersRound
+  AlertTriangle, ArrowRight, CheckCircle2, Clock3, Mail,
+  MapPinned, Navigation, Route, ShieldCheck, UsersRound
 } from 'lucide-react';
 import '../landingPreferences.css';
+import { usePreferences } from '../preferences/PreferencesContext';
+import PreferenceControls from '../components/PreferenceControls';
 
 const landingCopy = {
   en: {
@@ -162,31 +163,11 @@ const landingCopy = {
 const featureIcons = [AlertTriangle, MapPinned, Clock3, UsersRound];
 const stepNumbers = ['01', '02', '03', '04'];
 
-function readPreference(key, fallback, allowedValues) {
-  try {
-    const value = window.localStorage.getItem(key);
-    return allowedValues.includes(value) ? value : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export default function LandingPage() {
-  const [theme, setTheme] = useState(() => readPreference('roadguard.landing.theme', 'dark', ['dark', 'light']));
-  const [language, setLanguage] = useState(() => readPreference('roadguard.landing.language', 'en', ['en', 'te', 'hi']));
+  const { language, theme } = usePreferences();
   const copy = landingCopy[language];
   const scrollToFeatures = () => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL?.trim();
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-    try {
-      window.localStorage.setItem('roadguard.landing.theme', theme);
-      window.localStorage.setItem('roadguard.landing.language', language);
-    } catch {
-      // Preferences remain available for the current page session.
-    }
-  }, [language, theme]);
 
   return (
     <main className="landing-page" id="top" data-landing-theme={theme} lang={language}>
@@ -199,26 +180,7 @@ export default function LandingPage() {
           <a href="#top">{copy.home}</a><a href="#features">{copy.featuresNav}</a><a href="#how-it-works">{copy.howNav}</a><a href="#contact">{copy.contactNav}</a>
         </div>
         <div className="landing-nav-actions">
-          <div className="landing-preferences" aria-label={copy.settingsLabel}>
-            <button
-              className="landing-preference-button"
-              type="button"
-              onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}
-              aria-label={theme === 'dark' ? copy.themeDark : copy.themeLight}
-              title={theme === 'dark' ? copy.themeDark : copy.themeLight}
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <label className="landing-language-control">
-              <Languages size={17} aria-hidden="true" />
-              <span className="sr-only">{copy.languageLabel}</span>
-              <select value={language} onChange={event => setLanguage(event.target.value)} aria-label={copy.languageLabel}>
-                <option value="en">English</option>
-                <option value="te">తెలుగు</option>
-                <option value="hi">हिन्दी</option>
-              </select>
-            </label>
-          </div>
+          <PreferenceControls className="landing-preferences" />
           <Link className="landing-login-link" to="/login">{copy.login}</Link>
           <Link className="landing-button landing-button-small" to="/register">{copy.getStarted}</Link>
         </div>
