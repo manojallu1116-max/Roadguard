@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Camera, MapPin, AlertOctagon, Navigation, Upload, CheckCircle2 } from 'lucide-react';
+import { X, Camera, Images, MapPin, AlertOctagon, Navigation, Upload, CheckCircle2 } from 'lucide-react';
 import MapView from './MapView';
 import { ROAD_CATEGORIES, SEVERITY_LEVELS } from '../data/mockComplaints';
 import { reverseGeocode } from '../utils/reverseGeocode';
@@ -20,6 +20,8 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
   const [locationMessage, setLocationMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoError, setPhotoError] = useState('');
+  const photoPreviewRef = useRef(null);
   const lookupSequence = useRef(0);
   const lookupController = useRef(null);
   const lookupTimer = useRef(null);
@@ -85,14 +87,28 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-        setPhotoUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setPhotoError(t('Please choose a valid image file.'));
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setPhotoError(t('The selected photo could not be loaded. Please try another image.'));
+        return;
+      }
+      photoPreviewRef.current = reader.result;
+      setPhotoPreview(reader.result);
+      setPhotoUrl(reader.result);
+      setPhotoError('');
+    };
+    reader.onerror = () => {
+      setPhotoError(t('The selected photo could not be loaded. Please try another image.'));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSamplePhoto = () => {
@@ -103,8 +119,10 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
       "https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=600&q=80"
     ];
     const picked = samplePhotos[Math.floor(Math.random() * samplePhotos.length)];
+    photoPreviewRef.current = picked;
     setPhotoPreview(picked);
     setPhotoUrl(picked);
+    setPhotoError('');
   };
 
   const handleSubmit = async (e) => {
@@ -236,19 +254,35 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           {/* Photo Upload & Preview Section */}
           <div className="form-group">
             <label className="form-label">{t('Upload Damage Photo *')}</label>
-            <div className="upload-row" style={{ marginBottom: '10px' }}>
-              <label className="btn-secondary" style={{ flex: 1, cursor: 'pointer' }}>
-                <Camera size={16} /> {t('Take Photo / Choose File')}
-                <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} style={{ display: 'none' }} />
+            <div className="photo-upload-actions">
+              <label className="btn-secondary photo-upload-button">
+                <Camera size={17} /> {t('Take Photo')}
+                <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
               </label>
-              <button type="button" className="btn-secondary" onClick={handleSamplePhoto} style={{ fontSize: '0.75rem' }}>
+              <label className="btn-secondary photo-upload-button">
+                <Images size={17} /> {t('Choose File')}
+                <input type="file" accept="image/*" onChange={handleImageChange} />
+              </label>
+              <button type="button" className="btn-secondary photo-demo-button" onClick={handleSamplePhoto}>
                 {t('Use Demo Photo')}
               </button>
             </div>
 
-            {photoPreview && (
+            {photoError && <p className="auth-error" role="alert">{photoError}</p>}
+            {photoPreview && photoUrl && (
               <div className="photo-preview" style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                <img src={photoPreview} alt={t('Damage Preview')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img
+                  src={photoPreview}
+                  alt={t('Damage Preview')}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={() => {
+                    if (photoPreviewRef.current !== photoPreview) return;
+                    photoPreviewRef.current = null;
+                    setPhotoPreview(null);
+                    setPhotoUrl('');
+                    setPhotoError(t('The selected photo could not be displayed. Please choose another image.'));
+                  }}
+                />
                 <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(16,185,129,0.9)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={12} /> {t('Photo Attached')}
                 </span>
