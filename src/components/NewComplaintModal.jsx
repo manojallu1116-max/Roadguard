@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Camera, MapPin, AlertOctagon, Navigation, Upload, CheckCircle2 } from 'lucide-react';
 import MapView from './MapView';
 import { ROAD_CATEGORIES, SEVERITY_LEVELS } from '../data/mockComplaints';
+import { reverseGeocode } from '../utils/reverseGeocode';
+import { usePreferences } from '../preferences/PreferencesContext';
 
 export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }) {
+  const { t } = usePreferences();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(ROAD_CATEGORIES[0]);
   const [severity, setSeverity] = useState('Medium');
@@ -13,33 +16,72 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
   const [coords, setCoords] = useState(null);
   const [photoUrl, setPhotoUrl] = useState('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [locationRequestId, setLocationRequestId] = useState(0);
+  const [locationMessage, setLocationMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const lookupSequence = useRef(0);
+  const lookupController = useRef(null);
+  const lookupTimer = useRef(null);
 
-  if (!isOpen) return null;
+  useEffect(() => () => {
+    lookupSequence.current += 1;
+    lookupController.current?.abort();
+    clearTimeout(lookupTimer.current);
+  }, []);
 
-  const handleLocationSelect = (latlng) => {
+  useEffect(() => {
+    if (isOpen) return;
+    lookupSequence.current += 1;
+    lookupController.current?.abort();
+    clearTimeout(lookupTimer.current);
+    setIsGettingLocation(false);
+  }, [isOpen]);
+
+  const handleLocationSelect = useCallback((latlng) => {
+    const sequence = ++lookupSequence.current;
+    lookupController.current?.abort();
+    clearTimeout(lookupTimer.current);
+    const controller = new AbortController();
+    lookupController.current = controller;
     setCoords(latlng);
-  };
+    setAddress('');
+    setLocationMessage(t('Looking up a nearby address…'));
+    setIsGettingLocation(true);
+
+    lookupTimer.current = setTimeout(async () => {
+      try {
+        const resolvedAddress = await reverseGeocode(latlng, { signal: controller.signal });
+        if (sequence !== lookupSequence.current) return;
+        if (resolvedAddress) {
+          setAddress(resolvedAddress);
+          setLocationMessage(t('Address detected. You can edit it if needed.'));
+        } else {
+          setLocationMessage(t('No address was found. Enter a street or landmark manually.'));
+        }
+      } catch (error) {
+        if (sequence !== lookupSequence.current || error.name === 'AbortError') return;
+        console.warn('Reverse geocoding failed:', error);
+        setLocationMessage(t('Could not find an address. Enter a street or landmark manually.'));
+      } finally {
+        if (sequence === lookupSequence.current) setIsGettingLocation(false);
+      }
+    }, 1100);
+  }, [t]);
+
+  const handleLocationError = useCallback((message) => {
+    setIsGettingLocation(false);
+    setLocationMessage(`${t(message)} ${t('Select a point on the map or enter a street or landmark manually.')}`);
+  }, [t]);
 
   const handleUseGPS = () => {
+    if (isGettingLocation) return;
     setIsGettingLocation(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setCoords(latlng);
-          setIsGettingLocation(false);
-        },
-        () => {
-          setIsGettingLocation(false);
-          alert("Could not fetch GPS. Please select on the map or type address.");
-        }
-      );
-    } else {
-      setIsGettingLocation(false);
-    }
+    setLocationMessage(t('Getting your current GPS location…'));
+    setLocationRequestId(requestId => requestId + 1);
   };
+
+  if (!isOpen) return null;
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -69,19 +111,19 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
     e.preventDefault();
     if (isSubmitting) return;
     if (!title.trim()) {
-      alert("Please enter a title for the complaint.");
+      alert(t('Please enter a title for the complaint.'));
       return;
     }
     if (!address.trim()) {
-      alert("Please specify the location or select on map.");
+      alert(t('Please specify the location or select on map.'));
       return;
     }
     if (!coords) {
-      alert("Please use GPS or select the damage location on the map.");
+      alert(t('Please use GPS or select the damage location on the map.'));
       return;
     }
     if (!photoUrl) {
-      alert("Please upload a damage photo or choose the demo photo.");
+      alert(t('Please upload a damage photo or choose the demo photo.'));
       return;
     }
 
@@ -113,7 +155,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
         <div className="modal-header">
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertOctagon size={22} color="#38bdf8" />
-            Report Damaged Road
+            {t('Report Damaged Road')}
           </h3>
           <button 
             onClick={onClose} 
@@ -126,11 +168,11 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
         <form onSubmit={handleSubmit}>
           {/* Complaint Title */}
           <div className="form-group">
-            <label className="form-label">Issue Title / Short Summary *</label>
+            <label className="form-label">{t('Issue Title / Short Summary *')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. Deep Pothole near School Gate"
+              placeholder={t('e.g. Deep Pothole near School Gate')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -140,18 +182,18 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           {/* Category & Severity Grid */}
           <div className="form-group form-grid">
             <div>
-              <label className="form-label">Damage Type</label>
+              <label className="form-label">{t('Damage Type')}</label>
               <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                 {ROAD_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>{t(cat)}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="form-label">Severity Level</label>
+              <label className="form-label">{t('Severity Level')}</label>
               <select className="form-select" value={severity} onChange={(e) => setSeverity(e.target.value)}>
                 {SEVERITY_LEVELS.map(sev => (
-                  <option key={sev} value={sev}>{sev}</option>
+                  <option key={sev} value={sev}>{t(sev)}</option>
                 ))}
               </select>
             </div>
@@ -176,10 +218,10 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
               <AlertOctagon size={20} color={isHazardous ? '#ef4444' : '#94a3b8'} />
               <div>
                 <strong style={{ fontSize: '0.85rem', display: 'block', color: isHazardous ? '#ef4444' : 'var(--text-main)' }}>
-                  Tag as Emergency Hazard
+                  {t('Tag as Emergency Hazard')}
                 </strong>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  High risk for accidents or vehicle damage
+                  {t('High risk for accidents or vehicle damage')}
                 </span>
               </div>
             </div>
@@ -193,22 +235,22 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
 
           {/* Photo Upload & Preview Section */}
           <div className="form-group">
-            <label className="form-label">Upload Damage Photo *</label>
+            <label className="form-label">{t('Upload Damage Photo *')}</label>
             <div className="upload-row" style={{ marginBottom: '10px' }}>
               <label className="btn-secondary" style={{ flex: 1, cursor: 'pointer' }}>
-                <Camera size={16} /> Take Photo / Choose File
+                <Camera size={16} /> {t('Take Photo / Choose File')}
                 <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} style={{ display: 'none' }} />
               </label>
               <button type="button" className="btn-secondary" onClick={handleSamplePhoto} style={{ fontSize: '0.75rem' }}>
-                Use Demo Photo
+                {t('Use Demo Photo')}
               </button>
             </div>
 
             {photoPreview && (
               <div className="photo-preview" style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                <img src={photoPreview} alt="Damage Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={photoPreview} alt={t('Damage Preview')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(16,185,129,0.9)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <CheckCircle2 size={12} /> Photo Attached
+                  <CheckCircle2 size={12} /> {t('Photo Attached')}
                 </span>
               </div>
             )}
@@ -217,46 +259,64 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
           {/* Location Section with Live GPS & Map Picker */}
           <div className="form-group">
             <div className="form-row" style={{ marginBottom: '6px' }}>
-              <label className="form-label" style={{ margin: 0 }}>Location & Address *</label>
-              <button 
+              <label className="form-label" style={{ margin: 0 }}>{t('Location & Address *')}</label>
+              <button
                 type="button" 
                 onClick={handleUseGPS}
+                disabled={isGettingLocation}
                 style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
               >
                 <Navigation size={13} className={isGettingLocation ? 'animate-spin' : ''} />
-                {isGettingLocation ? 'Detecting GPS...' : 'Auto-Detect Live Location'}
+                {isGettingLocation ? t('Detecting GPS...') : t('Auto-Detect Live Location')}
               </button>
             </div>
 
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. Near HDFC Bank, Main Street, Ward 12"
+              placeholder={t('e.g. Near HDFC Bank, Main Street, Ward 12')}
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => {
+                lookupSequence.current += 1;
+                lookupController.current?.abort();
+                clearTimeout(lookupTimer.current);
+                setAddress(e.target.value);
+                setIsGettingLocation(false);
+                setLocationMessage(e.target.value ? t('Address entered manually.') : t('Enter a street or landmark for this location.'));
+              }}
               style={{ marginBottom: '8px' }}
               required
             />
+            {locationMessage && (
+              <p role="status" style={{ margin: '0 0 8px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                {locationMessage}
+              </p>
+            )}
             {coords && (
               <p style={{ margin: '0 0 8px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                Map pin selected: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}. Add a street or landmark above.
+                {t('Map pin selected: {lat}, {lng}. Add a street or landmark above.', { lat: coords.lat.toFixed(5), lng: coords.lng.toFixed(5) })}
               </p>
             )}
 
             <MapView 
               isPickerMode={true} 
               onLocationSelect={handleLocationSelect} 
+              onLocationError={handleLocationError}
+              locationRequestId={locationRequestId}
               initialPos={coords} 
             />
+            <p style={{ margin: '-8px 0 12px', color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+              {t('Address lookup:')} <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>© OpenStreetMap contributors</a>
+            </p>
           </div>
 
           {/* Description */}
           <div className="form-group">
-            <label className="form-label">Detailed Notes / Landmark</label>
+            <label className="form-label">{t('Detailed Notes / Landmark')}</label>
             <textarea 
               className="form-textarea" 
               rows="3" 
-              placeholder="Provide any additional details to help field workers locate and repair this issue faster..."
+              placeholder={t('Provide any additional details to help field workers locate and repair this issue faster...')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -264,7 +324,7 @@ export default function NewComplaintModal({ isOpen, onClose, onSubmitComplaint }
 
           {/* Submit Button */}
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
-            <Upload size={18} /> {isSubmitting ? 'Submitting Report…' : 'Submit Complaint to Authorities'}
+            <Upload size={18} /> {isSubmitting ? t('Submitting Report…') : t('Submit Complaint to Authorities')}
           </button>
         </form>
       </div>
