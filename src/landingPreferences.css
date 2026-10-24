@@ -1,0 +1,300 @@
+.landing-preferences {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(15, 30, 50, .72);
+}
+
+.landing-preference-button,
+.landing-language-control {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 8px;
+  color: #dbeafe;
+  background: transparent;
+}
+
+.landing-preference-button {
+  width: 38px;
+  cursor: pointer;
+}
+
+.landing-preference-button svg {
+  color: #fbbf24;
+}
+
+.landing-language-control {
+  padding: 0 7px;
+}
+
+.landing-language-control svg {
+  flex: 0 0 auto;
+  color: #86efac;
+}
+
+.landing-language-control select {
+  max-width: 92px;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.landing-language-control option {
+  color: #0f172a;
+  background: #fff;
+}
+
+.landing-preference-button:hover,
+.landing-language-control:hover {
+  background: rgba(148, 163, 184, .14);
+}
+
+.landing-preference-button:focus-visible,
+.landing-language-control:focus-within {
+  outline: 2px solid #4ade80;
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.landing-page[data-landing-theme="light"] {
+  color: #1e293b;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef5f8 48%, #f8fbff 100%);
+}
+
+.landing-page[data-landing-theme="light"] .landing-brand {
+  color: #10243a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-nav-links a,
+.landing-page[data-landing-theme="light"] .landing-login-link,
+.landing-page[data-landing-theme="light"] .landing-footer a {
+  color: #475569;
+}
+
+.landing-page[data-landing-theme="light"] .landing-nav-links a:hover,
+.landing-page[data-landing-theme="light"] .landing-login-link:hover,
+.landing-page[data-landing-theme="light"] .landing-footer a:hover {
+  color: #047857;
+}
+
+.landing-page[data-landing-theme="light"] .landing-preferences {
+  border-color: #cbd5e1;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, .07);
+}
+
+.landing-page[data-landing-theme="light"] .landing-preference-button,
+.landing-page[data-landing-theme="light"] .landing-language-control {
+  color: #334155;
+}
+
+.landing-page[data-landing-theme="light"] .landing-preference-button svg {
+  color: #4f46e5;
+}
+
+.landing-page[data-landing-theme="light"] .landing-language-control svg {
+  color: #047857;
+}
+
+.landing-page[data-landing-theme="light"] .landing-preference-button:hover,
+.landing-page[data-landing-theme="light"] .landing-language-control:hover {
+  background: #f1f5f9;
+}
+
+.landing-page[data-landing-theme="light"] .landing-hero h1,
+.landing-page[data-landing-theme="light"] .landing-section-heading h2,
+.landing-page[data-landing-theme="light"] .landing-cta-section h2,
+.landing-page[data-landing-theme="light"] .landing-contact h2 {
+  color: #10243a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-eyebrow {
+  color: #15803d;
+}
+
+.landing-page[data-landing-theme="light"] .landing-hero h1 span {
+  color: #16a34a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-lead,
+.landing-page[data-landing-theme="light"] .landing-section-heading > p:last-child,
+.landing-page[data-landing-theme="light"] .landing-cta-section p,
+.landing-page[data-landing-theme="light"] .landing-contact p,
+.landing-page[data-landing-theme="light"] .landing-footer p {
+  color: #52647a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-text-button {
+  color: #334155;
+}
+
+.landing-page[data-landing-theme="light"] .landing-text-button:hover {
+  color: #15803d;
+}
+
+.landing-page[data-landing-theme="light"] .landing-highlights div {
+  border-color: #d4dee8;
+  color: #334155;
+  background: rgba(255, 255, 255, .82);
+}
+
+.landing-page[data-landing-theme="light"] .landing-visual {
+  border-color: #cbd8e3;
+  background: radial-gradient(circle at 25% 20%, rgba(74, 222, 128, .2), transparent 33%), linear-gradient(145deg, #dcebe9, #c8d9e2);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, .12);
+}
+
+.landing-page[data-landing-theme="light"] .landing-map-grid {
+  background-image: linear-gradient(rgba(60, 90, 112, .13) 1px, transparent 1px), linear-gradient(90deg, rgba(60, 90, 112, .13) 1px, transparent 1px);
+}
+
+.landing-page[data-landing-theme="light"] .landing-road {
+  border-color: rgba(255, 255, 255, .8);
+  background: #8296a1;
+  box-shadow: 0 0 0 13px rgba(73, 104, 119, .18);
+}
+
+.landing-page[data-landing-theme="light"] .landing-report-preview {
+  border-color: rgba(255, 255, 255, .9);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, .16);
+}
+
+.landing-page[data-landing-theme="light"] .landing-report-preview strong {
+  color: #10243a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-report-preview p {
+  color: #52647a;
+}
+
+.landing-page[data-landing-theme="light"] .landing-preview-status {
+  color: #15803d;
+}
+
+.landing-page[data-landing-theme="light"] .landing-progress {
+  background: #dbe5ec;
+}
+
+.landing-page[data-landing-theme="light"] .landing-location-pill {
+  border-color: #86c9a1;
+  color: #14532d;
+  background: rgba(240, 253, 244, .96);
+}
+
+.landing-page[data-landing-theme="light"] .landing-feature-card,
+.landing-page[data-landing-theme="light"] .landing-step {
+  border-color: #d5e0e8;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
+}
+
+.landing-page[data-landing-theme="light"] .landing-feature-card h3,
+.landing-page[data-landing-theme="light"] .landing-step h3 {
+  color: #172b40;
+}
+
+.landing-page[data-landing-theme="light"] .landing-feature-card p,
+.landing-page[data-landing-theme="light"] .landing-step p {
+  color: #596b7d;
+}
+
+.landing-page[data-landing-theme="light"] .landing-feature-icon {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.landing-page[data-landing-theme="light"] .landing-step > span {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.landing-page[data-landing-theme="light"] .landing-cta-section {
+  border-color: #d5e0e8;
+  background: linear-gradient(115deg, #e8f4eb, #edf5fa);
+}
+
+.landing-page[data-landing-theme="light"] .landing-button-outline {
+  border-color: #a9bdcb;
+  color: #254158;
+  background: rgba(255, 255, 255, .55);
+}
+
+.landing-page[data-landing-theme="light"] .landing-button-outline:hover {
+  border-color: #15803d;
+  color: #14532d;
+  background: #fff;
+}
+
+.landing-page[data-landing-theme="light"] .landing-contact {
+  border-color: #d5e0e8;
+  background: rgba(255, 255, 255, .78);
+}
+
+.landing-page[data-landing-theme="light"] .landing-contact-icon {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.landing-page[data-landing-theme="light"] .landing-support-email {
+  color: #047857;
+}
+
+.landing-page[data-landing-theme="light"] .landing-footer {
+  border-color: #d5e0e8;
+}
+
+.landing-page[data-landing-theme="light"] .landing-footer-bottom {
+  border-color: #d5e0e8;
+  color: #64748b;
+}
+
+@media (max-width: 560px) {
+  .landing-nav-actions {
+    gap: 10px;
+  }
+
+  .landing-preferences {
+    gap: 2px;
+  }
+
+  .landing-language-control {
+    gap: 4px;
+    padding-inline: 5px;
+  }
+
+  .landing-language-control select {
+    max-width: 76px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
